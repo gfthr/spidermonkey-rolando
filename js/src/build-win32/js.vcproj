@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../src/Release;../src;../src/assembler"
+				AdditionalIncludeDirectories="./;./autogen;../;../assembler"
 				PreprocessorDefinitions="_DEBUG;IMPL_MFBT;HAVE_GETSYSTEMTIMEASFILETIME;HAVE_SYSTEMTIMETOFILETIME;__STDC_LIMIT_MACROS;XP_WIN;EXPORT_JS_API;_CRT_SECURE_NO_WARNINGS;WIN32;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -159,354 +159,354 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\jsalloc.cpp"
+				RelativePath="..\jsalloc.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsanalyze.cpp"
+				RelativePath="..\jsanalyze.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsapi.cpp"
+				RelativePath="..\jsapi.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsarray.cpp"
+				RelativePath="..\jsarray.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsatom.cpp"
+				RelativePath="..\jsatom.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsbool.cpp"
+				RelativePath="..\jsbool.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsclone.cpp"
+				RelativePath="..\jsclone.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jscntxt.cpp"
+				RelativePath="..\jscntxt.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jscompartment.cpp"
+				RelativePath="..\jscompartment.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jscrashreport.cpp"
+				RelativePath="..\jscrashreport.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsdate.cpp"
+				RelativePath="..\jsdate.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsdbgapi.cpp"
+				RelativePath="..\jsdbgapi.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsdhash.cpp"
+				RelativePath="..\jsdhash.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsdtoa.cpp"
+				RelativePath="..\jsdtoa.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsexn.cpp"
+				RelativePath="..\jsexn.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsfriendapi.cpp"
+				RelativePath="..\jsfriendapi.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsfun.cpp"
+				RelativePath="..\jsfun.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsgc.cpp"
+				RelativePath="..\jsgc.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsgcmark.cpp"
+				RelativePath="..\jsgcmark.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jshash.cpp"
+				RelativePath="..\jshash.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsinfer.cpp"
+				RelativePath="..\jsinfer.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsinterp.cpp"
+				RelativePath="..\jsinterp.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsiter.cpp"
+				RelativePath="..\jsiter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jslog2.cpp"
+				RelativePath="..\jslog2.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsmath.cpp"
+				RelativePath="..\jsmath.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsnativestack.cpp"
+				RelativePath="..\jsnativestack.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsnum.cpp"
+				RelativePath="..\jsnum.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsobj.cpp"
+				RelativePath="..\jsobj.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\json.cpp"
+				RelativePath="..\json.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsonparser.cpp"
+				RelativePath="..\jsonparser.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsopcode.cpp"
+				RelativePath="..\jsopcode.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsprf.cpp"
+				RelativePath="..\jsprf.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsprobes.cpp"
+				RelativePath="..\jsprobes.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jspropertycache.cpp"
+				RelativePath="..\jspropertycache.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jspropertytree.cpp"
+				RelativePath="..\jspropertytree.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsproxy.cpp"
+				RelativePath="..\jsproxy.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsscope.cpp"
+				RelativePath="..\jsscope.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsscript.cpp"
+				RelativePath="..\jsscript.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsstr.cpp"
+				RelativePath="..\jsstr.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jstypedarray.cpp"
+				RelativePath="..\jstypedarray.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsutil.cpp"
+				RelativePath="..\jsutil.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jswatchpoint.cpp"
+				RelativePath="..\jswatchpoint.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsweakmap.cpp"
+				RelativePath="..\jsweakmap.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jswrapper.cpp"
+				RelativePath="..\jswrapper.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsxdrapi.cpp"
+				RelativePath="..\jsxdrapi.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\jsxml.cpp"
+				RelativePath="..\jsxml.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\prmjtime.cpp"
+				RelativePath="..\prmjtime.cpp"
 				>
 			</File>
 			<Filter
 				Name="vm"
 				>
 				<File
-					RelativePath="..\src\vm\ArgumentsObject-inl.h"
+					RelativePath="..\vm\ArgumentsObject-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\ArgumentsObject.h"
+					RelativePath="..\vm\ArgumentsObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\BooleanObject-inl.h"
+					RelativePath="..\vm\BooleanObject-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\BooleanObject.h"
+					RelativePath="..\vm\BooleanObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\Debugger.cpp"
+					RelativePath="..\vm\Debugger.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\Debugger.h"
+					RelativePath="..\vm\Debugger.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\GlobalObject-inl.h"
+					RelativePath="..\vm\GlobalObject-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\GlobalObject.cpp"
+					RelativePath="..\vm\GlobalObject.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\GlobalObject.h"
+					RelativePath="..\vm\GlobalObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\MatchPairs.h"
+					RelativePath="..\vm\MatchPairs.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\MethodGuard-inl.h"
+					RelativePath="..\vm\MethodGuard-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\MethodGuard.cpp"
+					RelativePath="..\vm\MethodGuard.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\MethodGuard.h"
+					RelativePath="..\vm\MethodGuard.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\NumberObject-inl.h"
+					RelativePath="..\vm\NumberObject-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\NumberObject.h"
+					RelativePath="..\vm\NumberObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\ObjectImpl-inl.h"
+					RelativePath="..\vm\ObjectImpl-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\ObjectImpl.cpp"
+					RelativePath="..\vm\ObjectImpl.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\ObjectImpl.h"
+					RelativePath="..\vm\ObjectImpl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\RegExpObject-inl.h"
+					RelativePath="..\vm\RegExpObject-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\RegExpObject.cpp"
+					RelativePath="..\vm\RegExpObject.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\RegExpObject.h"
+					RelativePath="..\vm\RegExpObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\RegExpStatics-inl.h"
+					RelativePath="..\vm\RegExpStatics-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\RegExpStatics.cpp"
+					RelativePath="..\vm\RegExpStatics.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\RegExpStatics.h"
+					RelativePath="..\vm\RegExpStatics.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\ScopeObject-inl.h"
+					RelativePath="..\vm\ScopeObject-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\ScopeObject.cpp"
+					RelativePath="..\vm\ScopeObject.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\ScopeObject.h"
+					RelativePath="..\vm\ScopeObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\Stack-inl.h"
+					RelativePath="..\vm\Stack-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\Stack.cpp"
+					RelativePath="..\vm\Stack.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\Stack.h"
+					RelativePath="..\vm\Stack.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\String-inl.h"
+					RelativePath="..\vm\String-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\String.cpp"
+					RelativePath="..\vm\String.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\String.h"
+					RelativePath="..\vm\String.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\StringBuffer-inl.h"
+					RelativePath="..\vm\StringBuffer-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\StringBuffer.cpp"
+					RelativePath="..\vm\StringBuffer.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\StringBuffer.h"
+					RelativePath="..\vm\StringBuffer.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\StringObject-inl.h"
+					RelativePath="..\vm\StringObject-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\StringObject.h"
+					RelativePath="..\vm\StringObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\Unicode.cpp"
+					RelativePath="..\vm\Unicode.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\vm\Unicode.h"
+					RelativePath="..\vm\Unicode.h"
 					>
 				</File>
 			</Filter>
@@ -514,31 +514,31 @@
 				Name="gc"
 				>
 				<File
-					RelativePath="..\src\gc\Barrier-inl.h"
+					RelativePath="..\gc\Barrier-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\gc\Barrier.h"
+					RelativePath="..\gc\Barrier.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\gc\Memory.cpp"
+					RelativePath="..\gc\Memory.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\gc\Memory.h"
+					RelativePath="..\gc\Memory.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\gc\Root.h"
+					RelativePath="..\gc\Root.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\gc\Statistics.cpp"
+					RelativePath="..\gc\Statistics.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\gc\Statistics.h"
+					RelativePath="..\gc\Statistics.h"
 					>
 				</File>
 			</Filter>
@@ -546,23 +546,23 @@
 				Name="ds"
 				>
 				<File
-					RelativePath="..\src\ds\BitArray.h"
+					RelativePath="..\ds\BitArray.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\ds\InlineMap.h"
+					RelativePath="..\ds\InlineMap.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\ds\LifoAlloc.cpp"
+					RelativePath="..\ds\LifoAlloc.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\ds\LifoAlloc.h"
+					RelativePath="..\ds\LifoAlloc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\ds\Sort.h"
+					RelativePath="..\ds\Sort.h"
 					>
 				</File>
 			</Filter>
@@ -570,27 +570,27 @@
 				Name="builtin"
 				>
 				<File
-					RelativePath="..\src\builtin\MapObject.cpp"
+					RelativePath="..\builtin\MapObject.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\builtin\MapObject.h"
+					RelativePath="..\builtin\MapObject.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\builtin\RegExp.cpp"
+					RelativePath="..\builtin\RegExp.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\builtin\RegExp.h"
+					RelativePath="..\builtin\RegExp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\builtin\TestingFunctions.cpp"
+					RelativePath="..\builtin\TestingFunctions.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\builtin\TestingFunctions.h"
+					RelativePath="..\builtin\TestingFunctions.h"
 					>
 				</File>
 			</Filter>
@@ -598,83 +598,83 @@
 				Name="yarr"
 				>
 				<File
-					RelativePath="..\src\yarr\ASCIICType.h"
+					RelativePath="..\yarr\ASCIICType.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\BumpPointerAllocator.h"
+					RelativePath="..\yarr\BumpPointerAllocator.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\OSAllocator.h"
+					RelativePath="..\yarr\OSAllocator.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\OSAllocatorWin.cpp"
+					RelativePath="..\yarr\OSAllocatorWin.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\PageAllocation.h"
+					RelativePath="..\yarr\PageAllocation.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\PageBlock.cpp"
+					RelativePath="..\yarr\PageBlock.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\PageBlock.h"
+					RelativePath="..\yarr\PageBlock.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\RegExpJitTables.h"
+					RelativePath="..\yarr\RegExpJitTables.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\VMTags.h"
+					RelativePath="..\yarr\VMTags.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\wtfbridge.h"
+					RelativePath="..\yarr\wtfbridge.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\Yarr.h"
+					RelativePath="..\yarr\Yarr.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrInterpreter.cpp"
+					RelativePath="..\yarr\YarrInterpreter.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrInterpreter.h"
+					RelativePath="..\yarr\YarrInterpreter.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrJIT.cpp"
+					RelativePath="..\yarr\YarrJIT.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrJIT.h"
+					RelativePath="..\yarr\YarrJIT.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrParser.h"
+					RelativePath="..\yarr\YarrParser.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrPattern.cpp"
+					RelativePath="..\yarr\YarrPattern.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrPattern.h"
+					RelativePath="..\yarr\YarrPattern.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrSyntaxChecker.cpp"
+					RelativePath="..\yarr\YarrSyntaxChecker.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\yarr\YarrSyntaxChecker.h"
+					RelativePath="..\yarr\YarrSyntaxChecker.h"
 					>
 				</File>
 			</Filter>
@@ -685,59 +685,59 @@
 					Name="assembler"
 					>
 					<File
-						RelativePath="..\src\assembler\assembler\AbstractMacroAssembler.h"
+						RelativePath="..\assembler\assembler\AbstractMacroAssembler.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\AssemblerBuffer.h"
+						RelativePath="..\assembler\assembler\AssemblerBuffer.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\AssemblerBufferWithConstantPool.h"
+						RelativePath="..\assembler\assembler\AssemblerBufferWithConstantPool.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\CodeLocation.h"
+						RelativePath="..\assembler\assembler\CodeLocation.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\LinkBuffer.h"
+						RelativePath="..\assembler\assembler\LinkBuffer.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\MacroAssembler.h"
+						RelativePath="..\assembler\assembler\MacroAssembler.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\MacroAssemblerCodeRef.h"
+						RelativePath="..\assembler\assembler\MacroAssemblerCodeRef.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\MacroAssemblerSparc.h"
+						RelativePath="..\assembler\assembler\MacroAssemblerSparc.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\MacroAssemblerX86.h"
+						RelativePath="..\assembler\assembler\MacroAssemblerX86.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\MacroAssemblerX86Common.cpp"
+						RelativePath="..\assembler\assembler\MacroAssemblerX86Common.cpp"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\MacroAssemblerX86Common.h"
+						RelativePath="..\assembler\assembler\MacroAssemblerX86Common.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\RepatchBuffer.h"
+						RelativePath="..\assembler\assembler\RepatchBuffer.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\SparcAssembler.h"
+						RelativePath="..\assembler\assembler\SparcAssembler.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\assembler\X86Assembler.h"
+						RelativePath="..\assembler\assembler\X86Assembler.h"
 						>
 					</File>
 				</Filter>
@@ -745,15 +745,15 @@
 					Name="jit"
 					>
 					<File
-						RelativePath="..\src\assembler\jit\ExecutableAllocator.cpp"
+						RelativePath="..\assembler\jit\ExecutableAllocator.cpp"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\jit\ExecutableAllocator.h"
+						RelativePath="..\assembler\jit\ExecutableAllocator.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\jit\ExecutableAllocatorWin.cpp"
+						RelativePath="..\assembler\jit\ExecutableAllocatorWin.cpp"
 						>
 					</File>
 				</Filter>
@@ -761,7 +761,7 @@
 					Name="moco"
 					>
 					<File
-						RelativePath="..\src\assembler\moco\MocoStubs.h"
+						RelativePath="..\assembler\moco\MocoStubs.h"
 						>
 					</File>
 				</Filter>
@@ -769,23 +769,19 @@
 					Name="wtf"
 					>
 					<File
-						RelativePath="..\src\assembler\wtf\Assertions.cpp"
+						RelativePath="..\assembler\wtf\Assertions.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\wtf\Assertions.h"
+						RelativePath="..\assembler\wtf\Platform.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\wtf\Platform.h"
+						RelativePath="..\assembler\wtf\SegmentedVector.h"
 						>
 					</File>
 					<File
-						RelativePath="..\src\assembler\wtf\SegmentedVector.h"
-						>
-					</File>
-					<File
-						RelativePath="..\src\assembler\wtf\VMTags.h"
+						RelativePath="..\assembler\wtf\VMTags.h"
 						>
 					</File>
 				</Filter>
@@ -794,79 +790,79 @@
 				Name="frontend"
 				>
 				<File
-					RelativePath="..\src\frontend\BytecodeCompiler.cpp"
+					RelativePath="..\frontend\BytecodeCompiler.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\BytecodeCompiler.h"
+					RelativePath="..\frontend\BytecodeCompiler.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\BytecodeEmitter-inl.h"
+					RelativePath="..\frontend\BytecodeEmitter-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\BytecodeEmitter.cpp"
+					RelativePath="..\frontend\BytecodeEmitter.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\BytecodeEmitter.h"
+					RelativePath="..\frontend\BytecodeEmitter.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\FoldConstants.cpp"
+					RelativePath="..\frontend\FoldConstants.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\FoldConstants.h"
+					RelativePath="..\frontend\FoldConstants.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\ParseMaps-inl.h"
+					RelativePath="..\frontend\ParseMaps-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\ParseMaps.cpp"
+					RelativePath="..\frontend\ParseMaps.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\ParseMaps.h"
+					RelativePath="..\frontend\ParseMaps.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\ParseNode-inl.h"
+					RelativePath="..\frontend\ParseNode-inl.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\ParseNode.cpp"
+					RelativePath="..\frontend\ParseNode.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\ParseNode.h"
+					RelativePath="..\frontend\ParseNode.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\Parser.cpp"
+					RelativePath="..\frontend\Parser.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\Parser.h"
+					RelativePath="..\frontend\Parser.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\SemanticAnalysis.cpp"
+					RelativePath="..\frontend\SemanticAnalysis.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\SemanticAnalysis.h"
+					RelativePath="..\frontend\SemanticAnalysis.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\TokenStream.cpp"
+					RelativePath="..\frontend\TokenStream.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\frontend\TokenStream.h"
+					RelativePath="..\frontend\TokenStream.h"
 					>
 				</File>
 			</Filter>
@@ -874,83 +870,83 @@
 				Name="v8-dtoa"
 				>
 				<File
-					RelativePath="..\src\v8-dtoa\cached-powers.h"
+					RelativePath="..\v8-dtoa\cached-powers.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\checks.cc"
+					RelativePath="..\v8-dtoa\checks.cc"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\checks.h"
+					RelativePath="..\v8-dtoa\checks.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\conversions.cc"
+					RelativePath="..\v8-dtoa\conversions.cc"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\conversions.h"
+					RelativePath="..\v8-dtoa\conversions.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\diy-fp.cc"
+					RelativePath="..\v8-dtoa\diy-fp.cc"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\diy-fp.h"
+					RelativePath="..\v8-dtoa\diy-fp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\double.h"
+					RelativePath="..\v8-dtoa\double.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\dtoa.h"
+					RelativePath="..\v8-dtoa\dtoa.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\fast-dtoa.cc"
+					RelativePath="..\v8-dtoa\fast-dtoa.cc"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\fast-dtoa.h"
+					RelativePath="..\v8-dtoa\fast-dtoa.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\globals.h"
+					RelativePath="..\v8-dtoa\globals.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\include-v8.h"
+					RelativePath="..\v8-dtoa\include-v8.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\platform.cc"
+					RelativePath="..\v8-dtoa\platform.cc"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\platform.h"
+					RelativePath="..\v8-dtoa\platform.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\powers-ten.h"
+					RelativePath="..\v8-dtoa\powers-ten.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\utils.cc"
+					RelativePath="..\v8-dtoa\utils.cc"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\utils.h"
+					RelativePath="..\v8-dtoa\utils.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\v8-dtoa.cc"
+					RelativePath="..\v8-dtoa\v8-dtoa.cc"
 					>
 				</File>
 				<File
-					RelativePath="..\src\v8-dtoa\v8.h"
+					RelativePath="..\v8-dtoa\v8.h"
 					>
 				</File>
 			</Filter>
@@ -958,59 +954,59 @@
 				Name="mfbt"
 				>
 				<File
-					RelativePath="..\..\mfbt\Assertions.cpp"
+					RelativePath="..\..\..\mfbt\Assertions.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\Assertions.h"
+					RelativePath="..\..\..\mfbt\Assertions.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\Attributes.h"
+					RelativePath="..\..\..\mfbt\Attributes.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\BloomFilter.h"
+					RelativePath="..\..\..\mfbt\BloomFilter.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\GuardObjects.h"
+					RelativePath="..\..\..\mfbt\GuardObjects.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\HashFunctions.h"
+					RelativePath="..\..\..\mfbt\HashFunctions.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\Likely.h"
+					RelativePath="..\..\..\mfbt\Likely.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\LinkedList.h"
+					RelativePath="..\..\..\mfbt\LinkedList.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\MSStdInt.h"
+					RelativePath="..\..\..\mfbt\MSStdInt.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\RangedPtr.h"
+					RelativePath="..\..\..\mfbt\RangedPtr.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\RefPtr.h"
+					RelativePath="..\..\..\mfbt\RefPtr.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\StandardInteger.h"
+					RelativePath="..\..\..\mfbt\StandardInteger.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\Types.h"
+					RelativePath="..\..\..\mfbt\Types.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\mfbt\Util.h"
+					RelativePath="..\..\..\mfbt\Util.h"
 					>
 				</File>
 			</Filter>
@@ -1027,10 +1023,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-		<File
-			RelativePath=".\ReadMe.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

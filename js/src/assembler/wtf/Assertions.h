@@ -23,8 +23,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef WTF_Assertions_h
-#define WTF_Assertions_h
+#ifndef WTF_Assertions1_h
+#define WTF_Assertions1_h
 
 #include "Platform.h"
 #include "mozilla/Assertions.h"
