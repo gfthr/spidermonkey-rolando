@@ -1064,7 +1064,7 @@ CrashIfInvalidSlot(StackFrame *fp, Value *vp)
     if (vp < fp->slots() || vp >= fp->slots() + fp->script()->nslots) {
         JS_ASSERT(false && "About to dereference invalid slot");
         *(int *)0xbad = 0;  // show up nicely in crash-stats
-        MOZ_Assert("About to dereference invalid slot", __FILE__, __LINE__);
+//cjh        MOZ_Assert("About to dereference invalid slot", __FILE__, __LINE__);
     }
 }
 
