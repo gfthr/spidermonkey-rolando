@@ -90,7 +90,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -113,13 +113,14 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="false"
-				AdditionalIncludeDirectories="../src/Release"
-				PreprocessorDefinitions="XP_WIN;STATIC_JS_API;_CRT_SECURE_NO_WARNINGS;WIN32;_LIB"
+				AdditionalIncludeDirectories="./;./autogen;../;../assembler"
+				PreprocessorDefinitions="IMPL_MFBT;HAVE_GETSYSTEMTIMEASFILETIME;HAVE_SYSTEMTIMETOFILETIME;__STDC_LIMIT_MACROS;XP_WIN;EXPORT_JS_API;_CRT_SECURE_NO_WARNINGS;WIN32;_LIB"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4800;4244;4390"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -131,10 +132,14 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				AdditionalDependencies="Winmm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -144,6 +149,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
