@@ -37,7 +37,7 @@
 #  define ASSERT_DISABLED 1
 #endif
 
-#if 0 //cjh added
+#if 0 //James Chen closed, made it built successfully on win32.
 #define ASSERT(assertion) MOZ_ASSERT(assertion)
 #define ASSERT_UNUSED(variable, assertion) (((void)variable), ASSERT(assertion))
 #define ASSERT_NOT_REACHED() MOZ_NOT_REACHED("")
@@ -46,7 +46,7 @@
 #endif
 
 
-#if 1 //cjh opened
+#if 1 //James Chen opened, made it built successfully on win32.
 /*
    no namespaces because this file has to be includable from C and Objective-C
 
