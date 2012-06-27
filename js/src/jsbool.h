@@ -45,6 +45,15 @@
 
 #include "jsapi.h"
 #include "jsobj.h"
+#include "jsstr.h"
+
+extern js::Class js_BooleanClass;
+
+inline bool
+JSObject::isBoolean() const
+{
+    return getClass() == &js_BooleanClass;
+}
 
 extern JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj);
@@ -54,8 +63,8 @@ js_BooleanToString(JSContext *cx, JSBool b);
 
 namespace js {
 
-inline bool
-BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp);
+extern bool
+BooleanToStringBuffer(JSContext *cx, JSBool b, StringBuffer &sb);
 
 } /* namespace js */
 

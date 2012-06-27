@@ -38,8 +38,6 @@
 
 #define REPTACH_OFFSET_CALL_R11 3
 
-#include "mozilla/Util.h"
-
 namespace JSC {
 
 class MacroAssemblerX86_64 : public MacroAssemblerX86Common {
@@ -62,7 +60,7 @@ public:
     using MacroAssemblerX86Common::storeDouble;
     using MacroAssemblerX86Common::convertInt32ToDouble;
 
-    void add32(TrustedImm32 imm, AbsoluteAddress address)
+    void add32(Imm32 imm, AbsoluteAddress address)
     {
         move(ImmPtr(address.m_ptr), scratchRegister);
         add32(imm, Address(scratchRegister));
@@ -74,13 +72,13 @@ public:
         and32(imm, Address(scratchRegister));
     }
     
-    void or32(TrustedImm32 imm, AbsoluteAddress address)
+    void or32(Imm32 imm, AbsoluteAddress address)
     {
         move(ImmPtr(address.m_ptr), scratchRegister);
         or32(imm, Address(scratchRegister));
     }
 
-    void sub32(TrustedImm32 imm, AbsoluteAddress address)
+    void sub32(Imm32 imm, AbsoluteAddress address)
     {
         move(ImmPtr(address.m_ptr), scratchRegister);
         sub32(imm, Address(scratchRegister));
@@ -116,7 +114,7 @@ public:
         m_assembler.cvtsq2sd_rr(srcDest, dest);
     }
 
-    void store32(TrustedImm32 imm, void* address)
+    void store32(Imm32 imm, void* address)
     {
         move(X86Registers::eax, scratchRegister);
         move(imm, X86Registers::eax);
@@ -126,7 +124,7 @@ public:
 
     Call call()
     {
-        js::DebugOnly<DataLabelPtr> label = moveWithPatch(ImmPtr(0), scratchRegister);
+        DataLabelPtr label = moveWithPatch(ImmPtr(0), scratchRegister);
         Call result = Call(m_assembler.call(scratchRegister), Call::Linkable);
         ASSERT(differenceBetween(label, result) == REPTACH_OFFSET_CALL_R11);
         return result;
@@ -134,7 +132,7 @@ public:
 
     Call tailRecursiveCall()
     {
-        js::DebugOnly<DataLabelPtr> label = moveWithPatch(ImmPtr(0), scratchRegister);
+        DataLabelPtr label = moveWithPatch(ImmPtr(0), scratchRegister);
         Jump newJump = Jump(m_assembler.jmp_r(scratchRegister));
         ASSERT(differenceBetween(label, newJump) == REPTACH_OFFSET_CALL_R11);
         return Call::fromTailJump(newJump);
@@ -143,7 +141,7 @@ public:
     Call makeTailRecursiveCall(Jump oldJump)
     {
         oldJump.link(this);
-        js::DebugOnly<DataLabelPtr> label = moveWithPatch(ImmPtr(0), scratchRegister);
+        DataLabelPtr label = moveWithPatch(ImmPtr(0), scratchRegister);
         Jump newJump = Jump(m_assembler.jmp_r(scratchRegister));
         ASSERT(differenceBetween(label, newJump) == REPTACH_OFFSET_CALL_R11);
         return Call::fromTailJump(newJump);
@@ -218,11 +216,6 @@ public:
             move(imm, scratchRegister);
             m_assembler.andq_rr(scratchRegister, srcDest);
         }
-    }
-
-    void negPtr(RegisterID srcDest)
-    {
-        m_assembler.negq_r(srcDest);
     }
 
     void notPtr(RegisterID srcDest)
@@ -318,7 +311,7 @@ public:
         m_assembler.movq_rm(src, address.offset, address.base);
     }
 
-    void storePtr(TrustedImmPtr imm, BaseIndex address)
+    void storePtr(ImmPtr imm, BaseIndex address)
     {
         intptr_t value = intptr_t(imm.m_value);
 
@@ -348,7 +341,7 @@ public:
         }
     }
 
-    void storePtr(TrustedImmPtr imm, ImplicitAddress address)
+    void storePtr(ImmPtr imm, ImplicitAddress address)
     {
         intptr_t value = intptr_t(imm.m_value);
 
@@ -431,12 +424,6 @@ public:
         return branchPtr(cond, Address(scratchRegister), right);
     }
 
-    Jump branchPtr(Condition cond, AbsoluteAddress left, ImmPtr right, RegisterID scratch)
-    {
-        move(ImmPtr(left.m_ptr), scratch);
-        return branchPtr(cond, Address(scratch), right);
-    }
-
     Jump branchPtr(Condition cond, Address left, RegisterID right)
     {
         m_assembler.cmpq_rm(right, left.offset, left.base);
@@ -500,7 +487,7 @@ public:
         return Jump(m_assembler.jCC(x86Condition(cond)));
     }
 
-    DataLabelPtr moveWithPatch(TrustedImmPtr initialValue, RegisterID dest)
+    DataLabelPtr moveWithPatch(ImmPtr initialValue, RegisterID dest)
     {
         m_assembler.movq_i64r(initialValue.asIntptr(), dest);
         return DataLabelPtr(this);
@@ -518,7 +505,7 @@ public:
         return branchPtr(cond, left, scratchRegister);
     }
 
-    DataLabelPtr storePtrWithPatch(TrustedImmPtr initialValue, ImplicitAddress address)
+    DataLabelPtr storePtrWithPatch(ImmPtr initialValue, ImplicitAddress address)
     {
         DataLabelPtr label = moveWithPatch(initialValue, scratchRegister);
         storePtr(scratchRegister, address);

@@ -72,11 +72,11 @@ JS_BEGIN_EXTERN_C
 #define JSXDR_SWAB32(x) x
 #define JSXDR_SWAB16(x) x
 #elif defined IS_BIG_ENDIAN
-#define JSXDR_SWAB32(x) (((uint32_t)(x) >> 24) |                              \
-                         (((uint32_t)(x) >> 8) & 0xff00) |                    \
-                         (((uint32_t)(x) << 8) & 0xff0000) |                  \
-                         ((uint32_t)(x) << 24))
-#define JSXDR_SWAB16(x) (((uint16_t)(x) >> 8) | ((uint16_t)(x) << 8))
+#define JSXDR_SWAB32(x) (((uint32)(x) >> 24) |                                \
+                         (((uint32)(x) >> 8) & 0xff00) |                      \
+                         (((uint32)(x) << 8) & 0xff0000) |                    \
+                         ((uint32)(x) << 24))
+#define JSXDR_SWAB16(x) (((uint16)(x) >> 8) | ((uint16)(x) << 8))
 #else
 #error "unknown byte order"
 #endif
@@ -85,7 +85,8 @@ JS_BEGIN_EXTERN_C
 
 typedef enum JSXDRMode {
     JSXDR_ENCODE,
-    JSXDR_DECODE
+    JSXDR_DECODE,
+    JSXDR_FREE
 } JSXDRMode;
 
 typedef enum JSXDRWhence {
@@ -95,13 +96,13 @@ typedef enum JSXDRWhence {
 } JSXDRWhence;
 
 typedef struct JSXDROps {
-    JSBool      (*get32)(JSXDRState *, uint32_t *);
-    JSBool      (*set32)(JSXDRState *, uint32_t *);
-    JSBool      (*getbytes)(JSXDRState *, char *, uint32_t);
-    JSBool      (*setbytes)(JSXDRState *, char *, uint32_t);
-    void *      (*raw)(JSXDRState *, uint32_t);
-    JSBool      (*seek)(JSXDRState *, int32_t, JSXDRWhence);
-    uint32_t    (*tell)(JSXDRState *);
+    JSBool      (*get32)(JSXDRState *, uint32 *);
+    JSBool      (*set32)(JSXDRState *, uint32 *);
+    JSBool      (*getbytes)(JSXDRState *, char *, uint32);
+    JSBool      (*setbytes)(JSXDRState *, char *, uint32);
+    void *      (*raw)(JSXDRState *, uint32);
+    JSBool      (*seek)(JSXDRState *, int32, JSXDRWhence);
+    uint32      (*tell)(JSXDRState *);
     void        (*finalize)(JSXDRState *);
 } JSXDROps;
 
@@ -109,10 +110,12 @@ struct JSXDRState {
     JSXDRMode   mode;
     JSXDROps    *ops;
     JSContext   *cx;
+    JSClass     **registry;
+    uintN       numclasses;
+    uintN       maxclasses;
+    void        *reghash;
     void        *userdata;
-    const char  *sharedFilename;
-    JSPrincipals *principals;
-    JSPrincipals *originPrincipals;
+    JSScript    *script;
 };
 
 extern JS_PUBLIC_API(void)
@@ -122,12 +125,12 @@ extern JS_PUBLIC_API(JSXDRState *)
 JS_XDRNewMem(JSContext *cx, JSXDRMode mode);
 
 extern JS_PUBLIC_API(void *)
-JS_XDRMemGetData(JSXDRState *xdr, uint32_t *lp);
+JS_XDRMemGetData(JSXDRState *xdr, uint32 *lp);
 
 extern JS_PUBLIC_API(void)
-JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32_t len);
+JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len);
 
-extern JS_PUBLIC_API(uint32_t)
+extern JS_PUBLIC_API(uint32)
 JS_XDRMemDataLeft(JSXDRState *xdr);
 
 extern JS_PUBLIC_API(void)
@@ -137,19 +140,22 @@ extern JS_PUBLIC_API(void)
 JS_XDRDestroy(JSXDRState *xdr);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRUint8(JSXDRState *xdr, uint8_t *b);
+JS_XDRUint8(JSXDRState *xdr, uint8 *b);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRUint16(JSXDRState *xdr, uint16_t *s);
+JS_XDRUint16(JSXDRState *xdr, uint16 *s);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRUint32(JSXDRState *xdr, uint32_t *lp);
+JS_XDRUint32(JSXDRState *xdr, uint32 *lp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRBytes(JSXDRState *xdr, char *bytes, uint32_t len);
+JS_XDRBytes(JSXDRState *xdr, char *bytes, uint32 len);
 
 extern JS_PUBLIC_API(JSBool)
 JS_XDRCString(JSXDRState *xdr, char **sp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_XDRCStringOrNull(JSXDRState *xdr, char **sp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_XDRString(JSXDRState *xdr, JSString **strp);
@@ -158,13 +164,22 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRStringOrNull(JSXDRState *xdr, JSString **strp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRDouble(JSXDRState *xdr, double *dp);
+JS_XDRDouble(JSXDRState *xdr, jsdouble *dp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
+JS_XDRValue(JSXDRState *xdr, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
+JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_XDRRegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *lp);
+
+extern JS_PUBLIC_API(uint32)
+JS_XDRFindClassIdByName(JSXDRState *xdr, const char *name);
+
+extern JS_PUBLIC_API(JSClass *)
+JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 
 /*
  * Magic numbers.
@@ -180,21 +195,18 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
 #define JSXDR_MAGIC_SCRIPT_9        0xdead0009
 #define JSXDR_MAGIC_SCRIPT_10       0xdead000a
 #define JSXDR_MAGIC_SCRIPT_11       0xdead000b
-#define JSXDR_MAGIC_SCRIPT_12       0xdead000c
-#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_12
+#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_11
 
 /*
  * Bytecode version number. Increment the subtrahend whenever JS bytecode
  * changes incompatibly.
  *
- * This version number is XDR'd near the front of xdr bytecode and
- * aborts deserialization if there is a mismatch between the current
- * and saved versions. If deserialization fails, the data should be
- * invalidated if possible.
+ * This version number should be XDR'ed once near the front of any file or
+ * larger storage unit containing XDR'ed bytecode and other data, and checked
+ * before deserialization of bytecode.  If the saved version does not match
+ * the current version, abort deserialization and invalidate the file.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 109)
-
-JS_END_EXTERN_C
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 82)
 
 /*
  * Library-private functions.
@@ -202,14 +214,6 @@ JS_END_EXTERN_C
 extern JSBool
 js_XDRAtom(JSXDRState *xdr, JSAtom **atomp);
 
-/*
- * Set principals that should be assigned to decoded scripts and functions.
- * The principals is not held via JS_HoldPrincipals/JS_DropPrincipals unless
- * they are stored in a decoded script. Thus the caller must either ensure
- * that principal outlive the XDR instance or are explicitly set to NULL
- * before they release by the caller.
- */
-extern void
-js_XDRSetPrincipals(JSXDRState *xdr, JSPrincipals *principals, JSPrincipals *originPrincipals);
+JS_END_EXTERN_C
 
 #endif /* ! jsxdrapi_h___ */

@@ -190,7 +190,7 @@ TTYput(c)
 
 STATIC void
 TTYputs(p)
-    CONST CHAR	*p;
+    CHAR	*p;
 {
     while (*p)
 	TTYput(*p++);
@@ -1002,7 +1002,6 @@ void
 rl_reset_terminal(p)
     char	*p;
 {
-    (void)p;
 }
 
 void

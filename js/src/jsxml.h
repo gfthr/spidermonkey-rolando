@@ -43,8 +43,6 @@
 #include "jsobj.h"
 #include "jscell.h"
 
-#include "gc/Barrier.h"
-
 extern const char js_AnyName_str[];
 extern const char js_AttributeName_str[];
 extern const char js_isXMLName_str[];
@@ -55,16 +53,14 @@ extern const char js_gt_entity_str[];
 extern const char js_lt_entity_str[];
 extern const char js_quot_entity_str[];
 
-template<class T>
-struct JSXMLArrayCursor;
+typedef JSBool
+(* JSIdentityOp)(const void *a, const void *b);
 
-template<class T>
-struct JSXMLArray
-{
-    uint32_t            length;
-    uint32_t            capacity;
-    js::HeapPtr<T>      *vector;
-    JSXMLArrayCursor<T> *cursors;
+struct JSXMLArray {
+    uint32              length;
+    uint32              capacity;
+    void                **vector;
+    JSXMLArrayCursor    *cursors;
 
     void init() {
         length = capacity = 0;
@@ -74,22 +70,19 @@ struct JSXMLArray
 
     void finish(JSContext *cx);
 
-    bool setCapacity(JSContext *cx, uint32_t capacity);
+    bool setCapacity(JSContext *cx, uint32 capacity);
     void trim();
 };
 
-template<class T>
 struct JSXMLArrayCursor
 {
-    typedef js::HeapPtr<T> HeapPtrT;
+    JSXMLArray       *array;
+    uint32           index;
+    JSXMLArrayCursor *next;
+    JSXMLArrayCursor **prevp;
+    void             *root;
 
-    JSXMLArray<T>       *array;
-    uint32_t            index;
-    JSXMLArrayCursor<T> *next;
-    JSXMLArrayCursor<T> **prevp;
-    HeapPtrT            root;
-
-    JSXMLArrayCursor(JSXMLArray<T> *array)
+    JSXMLArrayCursor(JSXMLArray *array)
       : array(array), index(0), next(array->cursors), prevp(&array->cursors),
         root(NULL)
     {
@@ -107,24 +100,22 @@ struct JSXMLArrayCursor
             next->prevp = prevp;
         *prevp = next;
         array = NULL;
-        root.~HeapPtrT();
     }
 
-    T *getNext() {
+    void *getNext() {
         if (!array || index >= array->length)
             return NULL;
         return root = array->vector[index++];
     }
 
-    T *getCurrent() {
+    void *getCurrent() {
         if (!array || index >= array->length)
             return NULL;
         return root = array->vector[index];
     }
-};
 
-void js_XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<JSXML> *cursor);
-void js_XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor<JSObject> *cursor);
+    void trace(JSTracer *trc);
+};
 
 #define JSXML_PRESET_CAPACITY   JS_BIT(31)
 #define JSXML_CAPACITY_MASK     JS_BITMASK(31)
@@ -147,32 +138,32 @@ typedef enum JSXMLClass {
 #define JSXML_CLASS_HAS_KIDS(class_)    ((class_) < JSXML_CLASS_ATTRIBUTE)
 #define JSXML_CLASS_HAS_VALUE(class_)   ((class_) >= JSXML_CLASS_ATTRIBUTE)
 #define JSXML_CLASS_HAS_NAME(class_)                                          \
-    ((unsigned)((class_) - JSXML_CLASS_ELEMENT) <=                               \
-     (unsigned)(JSXML_CLASS_PROCESSING_INSTRUCTION - JSXML_CLASS_ELEMENT))
+    ((uintN)((class_) - JSXML_CLASS_ELEMENT) <=                               \
+     (uintN)(JSXML_CLASS_PROCESSING_INSTRUCTION - JSXML_CLASS_ELEMENT))
 
 #ifdef DEBUG_notme
 #include "jsclist.h"
 #endif
 
 typedef struct JSXMLListVar {
-    JSXMLArray<JSXML>   kids;           /* NB: must come first */
-    js::HeapPtrXML      target;
-    js::HeapPtrObject   targetprop;
+    JSXMLArray          kids;           /* NB: must come first */
+    JSXML               *target;
+    JSObject            *targetprop;
 } JSXMLListVar;
 
 typedef struct JSXMLElemVar {
-    JSXMLArray<JSXML>    kids;          /* NB: must come first */
-    JSXMLArray<JSObject> namespaces;
-    JSXMLArray<JSXML>    attrs;
+    JSXMLArray          kids;           /* NB: must come first */
+    JSXMLArray          namespaces;
+    JSXMLArray          attrs;
 } JSXMLElemVar;
 
 /* union member shorthands */
-#define xml_kids        list.kids
-#define xml_target      list.target
-#define xml_targetprop  list.targetprop
-#define xml_namespaces  elem.namespaces
-#define xml_attrs       elem.attrs
-#define xml_value       value
+#define xml_kids        u.list.kids
+#define xml_target      u.list.target
+#define xml_targetprop  u.list.targetprop
+#define xml_namespaces  u.elem.namespaces
+#define xml_attrs       u.elem.attrs
+#define xml_value       u.value
 
 /* xml_class-testing macros */
 #define JSXML_HAS_KIDS(xml)     JSXML_CLASS_HAS_KIDS((xml)->xml_class)
@@ -185,28 +176,32 @@ typedef struct JSXMLElemVar {
 struct JSXML : js::gc::Cell {
 #ifdef DEBUG_notme
     JSCList             links;
-    uint32_t            serial;
+    uint32              serial;
 #endif
-    js::HeapPtrObject   object;
+    JSObject            *object;
     void                *domnode;       /* DOM node if mapped info item */
-    js::HeapPtrXML      parent;
-    js::HeapPtrObject   name;
-    uint32_t            xml_class;      /* discriminates u, below */
-    uint32_t            xml_flags;      /* flags, see below */
-
-    JSXMLListVar        list;
-    JSXMLElemVar        elem;
-    js::HeapPtrString   value;
-
-#if JS_BITS_PER_WORD == 32
-    /* The size of every GC thing must be divisible by the FreeCell size. */
-    void *pad;
+    JSXML               *parent;
+    JSObject            *name;
+    uint32              xml_class;      /* discriminates u, below */
+    uint32              xml_flags;      /* flags, see below */
+    union {
+        JSXMLListVar    list;
+        JSXMLElemVar    elem;
+        JSString        *value;
+    } u;
+    
+    void finalize(JSContext *cx) {
+        if (JSXML_HAS_KIDS(this)) {
+            xml_kids.finish(cx);
+            if (xml_class == JSXML_CLASS_ELEMENT) {
+                xml_namespaces.finish(cx);
+                xml_attrs.finish(cx);
+            }
+        }
+#ifdef DEBUG_notme
+        JS_REMOVE_LINK(&links);
 #endif
-
-    void finalize(JSContext *cx, bool background);
-
-    static void writeBarrierPre(JSXML *xml);
-    static void writeBarrierPost(JSXML *xml, void *addr);
+    }
 };
 
 /* xml_flags values */
@@ -224,6 +219,54 @@ js_NewXMLObject(JSContext *cx, JSXMLClass xml_class);
 extern JSObject *
 js_GetXMLObject(JSContext *cx, JSXML *xml);
 
+extern JS_FRIEND_DATA(js::Class) js_XMLClass;
+extern JS_FRIEND_DATA(js::Class) js_NamespaceClass;
+extern JS_FRIEND_DATA(js::Class) js_QNameClass;
+extern JS_FRIEND_DATA(js::Class) js_AttributeNameClass;
+extern JS_FRIEND_DATA(js::Class) js_AnyNameClass;
+extern js::Class                 js_XMLFilterClass;
+
+/*
+ * Methods to test whether an object or a value is of type "xml" (per typeof).
+ */
+inline bool
+JSObject::isXML() const
+{
+    return getClass() == &js_XMLClass;
+}
+
+inline bool
+JSObject::isXMLId() const
+{
+    js::Class *clasp = getClass();
+    return clasp == &js_QNameClass ||
+           clasp == &js_AttributeNameClass ||
+           clasp == &js_AnyNameClass;
+}
+
+#define VALUE_IS_XML(v)      (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isXML())
+
+inline bool
+JSObject::isNamespace() const
+{
+    return getClass() == &js_NamespaceClass;
+}
+
+inline bool
+JSObject::isQName() const
+{
+    js::Class* clasp = getClass();
+    return clasp == &js_QNameClass ||
+           clasp == &js_AttributeNameClass ||
+           clasp == &js_AnyNameClass;
+}
+
+static inline bool
+IsXML(const js::Value &v)
+{
+    return v.isObject() && v.toObject().isXML();
+}
+
 extern JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj);
 
@@ -236,12 +279,15 @@ js_InitXMLClass(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_InitXMLClasses(JSContext *cx, JSObject *obj);
 
+extern JSBool
+js_GetFunctionNamespace(JSContext *cx, js::Value *vp);
+
 /*
- * If obj is a QName corresponding to function::name, set *funidp to name's id
- * and return true, else return false.
+ * If obj is QName corresponding to function::name, set *funidp to name's id,
+ * otherwise set *funidp to void.
  */
-extern bool
-js_GetLocalNameFromFunctionQName(JSObject *obj, jsid *funidp, JSContext *cx);
+JSBool
+js_IsFunctionQName(JSContext *cx, JSObject *obj, jsid *funidp);
 
 extern JSBool
 js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp);
@@ -324,12 +370,5 @@ js_TestXMLEquality(JSContext *cx, const js::Value &v1, const js::Value &v2,
 
 extern JSBool
 js_ConcatenateXML(JSContext *cx, JSObject *obj1, JSObject *obj2, js::Value *vp);
-
-namespace js {
-
-extern bool
-GetLocalNameFromFunctionQName(JSObject *qn, JSAtom **namep, JSContext *cx);
-
-} /* namespace js */
 
 #endif /* jsxml_h___ */

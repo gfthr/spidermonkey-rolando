@@ -33,6 +33,7 @@
 #include "assembler/wtf/Platform.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
+#include "jsstdint.h"
 
 #if ENABLE_ASSEMBLER
 
@@ -165,13 +166,13 @@ public:
         void* m_ptr;
     };
 
-    // TrustedImmPtr:
+    // ImmPtr:
     //
     // A pointer sized immediate operand to an instruction - this is wrapped
     // in a class requiring explicit construction in order to differentiate
     // from pointers used as absolute addresses to memory operations
-    struct TrustedImmPtr {
-        explicit TrustedImmPtr(const void* value)
+    struct ImmPtr {
+        explicit ImmPtr(const void* value)
             : m_value(value)
         {
         }
@@ -184,21 +185,14 @@ public:
         const void* m_value;
     };
 
-    struct ImmPtr : public TrustedImmPtr {
-        explicit ImmPtr(const void* value)
-            : TrustedImmPtr(value)
-        {
-        }
-    };
- 
-    // TrustedImm32:
+    // Imm32:
     //
     // A 32bit immediate operand to an instruction - this is wrapped in a
     // class requiring explicit construction in order to prevent RegisterIDs
     // (which are implemented as an enum) from accidentally being passed as
     // immediate values.
-    struct TrustedImm32 {
-        explicit TrustedImm32(int32_t value)
+    struct Imm32 {
+        explicit Imm32(int32_t value)
             : m_value(value)
 #if WTF_CPU_ARM || WTF_CPU_MIPS
             , m_isPointer(false)
@@ -207,7 +201,7 @@ public:
         }
 
 #if !WTF_CPU_X86_64
-        explicit TrustedImm32(TrustedImmPtr ptr)
+        explicit Imm32(ImmPtr ptr)
             : m_value(ptr.asIntptr())
 #if WTF_CPU_ARM || WTF_CPU_MIPS
             , m_isPointer(true)
@@ -229,27 +223,13 @@ public:
 #endif
     };
 
-
-    struct Imm32 : public TrustedImm32 {
-        explicit Imm32(int32_t value)
-            : TrustedImm32(value)
-        {
-        }
-#if !WTF_CPU_X86_64
-        explicit Imm32(TrustedImmPtr ptr)
-            : TrustedImm32(ptr)
-        {
-        }
-#endif
-    };
-
     struct ImmDouble {
         union {
             struct {
 #if WTF_CPU_BIG_ENDIAN || WTF_CPU_MIDDLE_ENDIAN
-                uint32_t msb, lsb;
+                uint32 msb, lsb;
 #else
-                uint32_t lsb, msb;
+                uint32 lsb, msb;
 #endif
             } s;
             uint64_t u64;
@@ -260,6 +240,7 @@ public:
             u.d = d;
         }
     };
+
 
     // Section 2: MacroAssembler code buffer handles
     //
@@ -292,7 +273,7 @@ public:
         
         bool isUsed() const { return m_label.isUsed(); }
         void used() { m_label.used(); }
-        bool isSet() const { return m_label.isValid(); }
+        bool isValid() const { return m_label.isValid(); }
     private:
         JmpDst m_label;
     };
@@ -315,8 +296,6 @@ public:
         {
         }
         
-        bool isSet() const { return m_label.isValid(); }
-
     private:
         JmpDst m_label;
     };
@@ -432,20 +411,6 @@ public:
     public:
         typedef js::Vector<Jump, 16 ,js::SystemAllocPolicy > JumpVector;
 
-        JumpList() {}
-
-        JumpList(const JumpList &other)
-        {
-            m_jumps.append(other.m_jumps);
-        }
-
-        JumpList &operator=(const JumpList &other)
-        {
-            m_jumps.clear();
-            m_jumps.append(other.m_jumps);
-            return *this;
-        }
-
         void link(AbstractMacroAssembler<AssemblerType>* masm)
         {
             size_t size = m_jumps.length();
@@ -467,14 +432,9 @@ public:
             m_jumps.append(jump);
         }
         
-        void append(const JumpList& other)
+        void append(JumpList& other)
         {
             m_jumps.append(other.m_jumps.begin(), other.m_jumps.length());
-        }
-
-        void clear()
-        {
-            m_jumps.clear();
         }
 
         bool empty()
@@ -482,7 +442,7 @@ public:
             return !m_jumps.length();
         }
         
-        const JumpVector& jumps() const { return m_jumps; }
+        const JumpVector& jumps() { return m_jumps; }
 
     private:
         JumpVector m_jumps;
@@ -511,10 +471,9 @@ public:
         return m_assembler.oom();
     }
 
-    void executableCopy(void* buffer)
+    void* executableCopy(void* buffer)
     {
-        ASSERT(!oom());
-        m_assembler.executableCopy(buffer);
+        return m_assembler.executableCopy(buffer);
     }
 
     Label label()
@@ -559,11 +518,6 @@ public:
     }
 
     ptrdiff_t differenceBetween(DataLabel32 from, Label to)
-    {
-        return AssemblerType::getDifferenceBetweenLabels(from.m_label, to.m_label);
-    }
-
-    ptrdiff_t differenceBetween(DataLabelPtr from, Label to)
     {
         return AssemblerType::getDifferenceBetweenLabels(from.m_label, to.m_label);
     }

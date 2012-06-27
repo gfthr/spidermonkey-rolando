@@ -42,6 +42,7 @@
 #define jsstub_compiler_h__
 
 #include "jscntxt.h"
+#include "jstl.h"
 #include "MethodJIT.h"
 #include "methodjit/FrameState.h"
 #include "CodeGenIncludes.h"
@@ -67,25 +68,25 @@ class StubCompiler
     };
 
     struct CrossJumpInScript {
-        CrossJumpInScript(Jump from, jsbytecode *pc, uint32_t inlineIndex)
-          : from(from), pc(pc), inlineIndex(inlineIndex)
+        CrossJumpInScript(Jump from, jsbytecode *pc)
+          : from(from), pc(pc)
         { }
 
         Jump from;
         jsbytecode *pc;
-        uint32_t inlineIndex;
     };
 
     JSContext *cx;
     Compiler &cc;
     FrameState &frame;
+    JSScript *script;
 
   public:
     Assembler masm;
 
   private:
-    uint32_t generation;
-    uint32_t lastGeneration;
+    uint32 generation;
+    uint32 lastGeneration;
 
     Vector<CrossPatch, 64, mjit::CompilerAllocPolicy> exits;
     Vector<CrossPatch, 64, mjit::CompilerAllocPolicy> joins;
@@ -93,13 +94,13 @@ class StubCompiler
     Vector<Jump, 8, SystemAllocPolicy> jumpList;
 
   public:
-    StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame);
+    StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
 
     size_t size() {
         return masm.size();
     }
 
-    uint8_t *buffer() {
+    uint8 *buffer() {
         return masm.buffer();
     }
 
@@ -121,7 +122,7 @@ class StubCompiler
     void linkExitDirect(Jump j, Label L);
 
     void leave();
-    void leaveWithDepth(uint32_t depth);
+    void leaveWithDepth(uint32 depth);
 
     /*
      * Rejoins slow-path code back to the fast-path. The invalidation param
@@ -132,14 +133,12 @@ class StubCompiler
     void linkRejoin(Jump j);
 
     /* Finish all native code patching. */
-    void fixCrossJumps(uint8_t *ncode, size_t offset, size_t total);
+    void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
     bool jumpInScript(Jump j, jsbytecode *target);
-    unsigned crossJump(Jump j, Label l);
+    void crossJump(Jump j, Label l);
 
-    Call emitStubCall(void *ptr, RejoinState rejoin, Uses uses);
-    Call emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32_t slots);
-
-    void patchJoin(unsigned i, bool script, Assembler::Address address, AnyRegisterID reg);
+    Call emitStubCall(void *ptr, uint32 id);
+    Call emitStubCall(void *ptr, int32 slots, uint32 id);
 };
 
 } /* namepsace mjit */

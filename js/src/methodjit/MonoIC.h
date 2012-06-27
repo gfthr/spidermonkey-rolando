@@ -53,10 +53,10 @@ namespace mjit {
 
 class FrameSize
 {
-    uint32_t frameDepth_ : 16;
-    uint32_t argc_;
+    uint32 frameDepth_ : 16;
+    uint32 argc_;
   public:
-    void initStatic(uint32_t frameDepth, uint32_t argc) {
+    void initStatic(uint32 frameDepth, uint32 argc) {
         JS_ASSERT(frameDepth > 0);
         frameDepth_ = frameDepth;
         argc_ = argc;
@@ -75,36 +75,18 @@ class FrameSize
         return frameDepth_ == 0;
     }
 
-    uint32_t staticLocalSlots() const {
+    uint32 staticLocalSlots() const {
         JS_ASSERT(isStatic());
         return frameDepth_;
     }
 
-    uint32_t staticArgc() const {
+    uint32 staticArgc() const {
         JS_ASSERT(isStatic());
         return argc_;
     }
 
-    uint32_t getArgc(VMFrame &f) const {
+    uint32 getArgc(VMFrame &f) const {
         return isStatic() ? staticArgc() : f.u.call.dynamicArgc;
-    }
-
-    bool lowered(jsbytecode *pc) const {
-        return isDynamic() || staticArgc() != GET_ARGC(pc);
-    }
-
-    RejoinState rejoinState(jsbytecode *pc, bool native) {
-        if (isStatic()) {
-            if (staticArgc() == GET_ARGC(pc))
-                return native ? REJOIN_NATIVE : REJOIN_CALL_PROLOGUE;
-            JS_ASSERT(staticArgc() == GET_ARGC(pc) - 1);
-            return native ? REJOIN_NATIVE_LOWERED : REJOIN_CALL_PROLOGUE_LOWERED_CALL;
-        }
-        return native ? REJOIN_NATIVE_LOWERED : REJOIN_CALL_PROLOGUE_LOWERED_APPLY;
-    }
-
-    bool lowered(jsbytecode *pc) {
-        return !isStatic() || staticArgc() != GET_ARGC(pc);
     }
 };
 
@@ -126,8 +108,9 @@ struct GlobalNameIC
      *   of this, x86 is the only platform which requires non-trivial patching
      *   code.
      */
-    int32_t loadStoreOffset   : 15;
-    int32_t shapeOffset       : 15;
+    int32 loadStoreOffset   : 15;
+    int32 shapeOffset       : 15;
+    bool usePropertyCache   : 1;
 };
 
 struct GetGlobalNameIC : public GlobalNameIC
@@ -142,22 +125,45 @@ struct SetGlobalNameIC : public GlobalNameIC
     JSC::JITCode            extraStub;
 
     /* SET only, if we had to generate an out-of-line path. */
-    int32_t inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
-    int32_t extraShapeGuard : 6;    /* Offset into stub for shape guard. */
+    int inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
+    int extraShapeGuard : 6;    /* Offset into stub for shape guard. */
     bool objConst : 1;          /* True if the object is constant. */
     RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
     RegisterID shapeReg : 5;    /* Register for shape; volatile. */
     bool hasExtraStub : 1;      /* Extra stub is preset. */
 
-    int32_t fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
-    int32_t extraStoreOffset : 16;  /* Offset into store code. */
+    int fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
+    int extraStoreOffset : 16;  /* Offset into store code. */
 
     /* SET only. */
     ValueRemat vr;              /* RHS value. */
 
-    void patchInlineShapeGuard(Repatcher &repatcher, const Shape *shape);
-    void patchExtraShapeGuard(Repatcher &repatcher, const Shape *shape);
+    void patchInlineShapeGuard(Repatcher &repatcher, int32 shape);
+    void patchExtraShapeGuard(Repatcher &repatcher, int32 shape);
 };
+
+struct TraceICInfo {
+    TraceICInfo() {}
+
+    JSC::CodeLocationLabel stubEntry;
+    JSC::CodeLocationLabel jumpTarget;
+    JSC::CodeLocationJump traceHint;
+    JSC::CodeLocationJump slowTraceHint;
+#ifdef DEBUG
+    jsbytecode *jumpTargetPC;
+#endif
+    
+    /* This data is used by the tracing JIT. */
+    void *traceData;
+    uintN traceEpoch;
+    uint32 loopCounter;
+    uint32 loopCounterStart;
+
+    bool initialized : 1;
+    bool hasSlowTraceHint : 1;
+};
+
+static const uint16 BAD_TRACEIC_INDEX = (uint16)0xffff;
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic);
 void JS_FASTCALL SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic);
@@ -185,12 +191,10 @@ JSBool JS_FASTCALL Equality(VMFrame &f, ic::EqualityICInfo *ic);
 struct CallICInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
-    /* Linked list entry for all ICs guarding on the same JIT entry point in fastGuardedObject. */
-    JSCList links;
-
     enum PoolIndex {
         Pool_ScriptStub,
         Pool_ClosureStub,
+        Pool_NativeStub,
         Total_Pools
     };
 
@@ -200,8 +204,8 @@ struct CallICInfo {
     JSObject *fastGuardedObject;
     JSObject *fastGuardedNative;
 
-    /* Return site for scripted calls at this site, with PC and inlining state. */
-    CallSite *call;
+    /* PC at the call site. */
+    jsbytecode *pc;
 
     FrameSize frameSize;
 
@@ -215,40 +219,41 @@ struct CallICInfo {
     JSC::CodeLocationJump funJump;
 
     /* Offset to inline scripted call, from funGuard. */
-    uint32_t hotJumpOffset   : 16;
-    uint32_t joinPointOffset : 16;
+    uint32 hotJumpOffset   : 16;
+    uint32 joinPointOffset : 16;
 
     /* Out of line slow call. */
-    uint32_t oolCallOffset   : 16;
+    uint32 oolCallOffset   : 16;
 
     /* Jump to patch for out-of-line scripted calls. */
-    uint32_t oolJumpOffset   : 16;
+    uint32 oolJumpOffset   : 16;
 
     /* Label for out-of-line call to IC function. */
-    uint32_t icCallOffset    : 16;
+    uint32 icCallOffset    : 16;
 
     /* Offset for deep-fun check to rejoin at. */
-    uint32_t hotPathOffset   : 16;
+    uint32 hotPathOffset   : 16;
 
     /* Join point for all slow call paths. */
-    uint32_t slowJoinOffset  : 16;
+    uint32 slowJoinOffset  : 16;
 
     RegisterID funObjReg : 5;
+    RegisterID funPtrReg : 5;
     bool hit : 1;
     bool hasJsFunCheck : 1;
-    bool typeMonitored : 1;
 
     inline void reset() {
         fastGuardedObject = NULL;
         fastGuardedNative = NULL;
         hit = false;
         hasJsFunCheck = false;
-        PodArrayZero(pools);
+        pools[0] = pools[1] = pools[2] = NULL;
     }
 
     inline void releasePools() {
         releasePool(Pool_ScriptStub);
         releasePool(Pool_ClosureStub);
+        releasePool(Pool_NativeStub);
     }
 
     inline void releasePool(PoolIndex index) {
@@ -257,23 +262,16 @@ struct CallICInfo {
             pools[index] = NULL;
         }
     }
-
-    inline void purgeGuardedObject() {
-        JS_ASSERT(fastGuardedObject);
-        releasePool(CallICInfo::Pool_ClosureStub);
-        hasJsFunCheck = false;
-        fastGuardedObject = NULL;
-        JS_REMOVE_LINK(&links);
-    }
 };
 
 void * JS_FASTCALL New(VMFrame &f, ic::CallICInfo *ic);
 void * JS_FASTCALL Call(VMFrame &f, ic::CallICInfo *ic);
-void * JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
-void * JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
+void JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
+void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
 JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
-void GenerateArgumentCheckStub(VMFrame &f);
+void PurgeMICs(JSContext *cx, JSScript *script);
+void SweepCallICs(JSContext *cx, JSScript *script, bool purgeAll);
 
 } /* namespace ic */
 } /* namespace mjit */

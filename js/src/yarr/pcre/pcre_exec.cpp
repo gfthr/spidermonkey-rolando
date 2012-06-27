@@ -45,7 +45,8 @@ the JavaScript specification. There are also some supporting functions. */
 #include "pcre_internal.h"
 
 #include <limits.h>
-#include "yarr/ASCIICType.h"
+#include "yarr/jswtfbridge.h"
+#include "yarr/wtf/ASCIICType.h"
 #include "jsarena.h"
 #include "jscntxt.h"
 
@@ -195,7 +196,7 @@ struct MatchFrame {
 
     /* Extract the bracket data after the current opcode/link at |instructionPtr| into the locals. */
     void extractBrackets(const unsigned char *instructionPtr) {
-        uint16_t bracketMess = get2ByteValue(instructionPtr + 1 + LINK_SIZE);
+        uint16 bracketMess = get2ByteValue(instructionPtr + 1 + LINK_SIZE);
         locals.minBracket = (bracketMess >> 8) & 0xff;
         locals.limitBracket = (bracketMess & 0xff);
         JS_ASSERT(locals.minBracket <= locals.limitBracket);
@@ -393,7 +394,7 @@ struct MatchStack {
         if (canUseStackBufferForNextFrame())
             return currentFrame + 1;
         // FIXME: bug 574459 -- no NULL check
-        MatchFrame *frame = js::OffTheBooks::new_<MatchFrame>();
+        MatchFrame *frame = js_new<MatchFrame>();
         frame->init(regExpPool);
         return frame;
     }
@@ -416,7 +417,7 @@ struct MatchStack {
         MatchFrame* oldFrame = currentFrame;
         currentFrame = currentFrame->previousFrame;
         if (size > numFramesOnStack)
-            js::Foreground::delete_(oldFrame);
+            js_delete(oldFrame);
         size--;
     }
 
@@ -602,7 +603,7 @@ RECURSE:
                 
             BEGIN_OPCODE(ASSERT):
                 {
-                    uint16_t bracketMess = get2ByteValue(stack.currentFrame->args.instructionPtr + 1 + LINK_SIZE);
+                    uint16 bracketMess = get2ByteValue(stack.currentFrame->args.instructionPtr + 1 + LINK_SIZE);
                     LOCALS(minBracket) = (bracketMess >> 8) & 0xff;
                     LOCALS(limitBracket) = bracketMess & 0xff;
                     JS_ASSERT(LOCALS(minBracket) <= LOCALS(limitBracket));

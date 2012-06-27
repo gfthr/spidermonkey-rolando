@@ -38,13 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_logging_h__
+#if !defined jsjaeger_logging_h__ && (defined JS_METHODJIT || defined JS_TRACER)
 #define jsjaeger_logging_h__
 
-#include "assembler/wtf/Platform.h"
 #include "prmjtime.h"
-
-#if defined(JS_METHODJIT) || ENABLE_YARR_JIT
 
 namespace js {
 
@@ -56,11 +53,7 @@ namespace js {
     _(Insns)                \
     _(VMFrame)              \
     _(PICs)                 \
-    _(SlowCalls)            \
-    _(Analysis)             \
-    _(Regalloc)             \
-    _(Inlining)             \
-    _(Recompile)
+    _(SlowCalls)
 
 enum JaegerSpewChannel {
 #define _(name) JSpew_##name,
@@ -77,25 +70,14 @@ enum JaegerSpewChannel {
 
 void JMCheckLogging();
 
-struct ConditionalLog {
-    uint32_t oldBits;
-    bool logging;
-    ConditionalLog(bool logging);
-    ~ConditionalLog();
-};
-
 bool IsJaegerSpewChannelActive(JaegerSpewChannel channel);
-#ifdef __GNUC__
-void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...) __attribute__ ((format (printf, 2, 3)));
-#else
 void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...);
-#endif
 
 struct Profiler {
-    int64_t t_start;
-    int64_t t_stop;
+    JSInt64 t_start;
+    JSInt64 t_stop;
 
-    static inline int64_t now() {
+    static inline JSInt64 now() {
         return PRMJ_Now();
     }
 
@@ -107,12 +89,12 @@ struct Profiler {
         t_stop = now();
     }
 
-    inline uint32_t time_ms() {
-        return uint32_t((t_stop - t_start) / PRMJ_USEC_PER_MSEC);
+    inline uint32 time_ms() {
+        return uint32((t_stop - t_start) / PRMJ_USEC_PER_MSEC);
     }
 
-    inline uint32_t time_us() {
-        return uint32_t(t_stop - t_start);
+    inline uint32 time_us() {
+        return uint32(t_stop - t_start);
     }
 };
 
@@ -125,8 +107,6 @@ static inline void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...)
 #endif
 
 }
-
-#endif
 
 #endif
 

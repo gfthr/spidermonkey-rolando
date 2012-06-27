@@ -23,7 +23,6 @@ alloc.h
 alsa/asoundlib.h
 alsa/pcm.h
 alsa/mixer.h
-android/log.h
 ansi_parms.h
 a.out.h
 app/Cursor.h
@@ -41,6 +40,7 @@ asm/signal.h
 ASRegistry.h
 assert.h
 atk/atk.h
+atlbase.h
 atlcom.h
 atlconv.h
 atlctl.cpp
@@ -70,6 +70,9 @@ bstring.h
 builtin.h
 Button.h
 byteswap.h
+#if MOZ_ENABLE_LIBXUL!=1
+#define WRAP_CAIRO_HEADERS
+#endif
 #if MOZ_TREE_CAIRO!=1
 #define WRAP_CAIRO_HEADERS
 #endif
@@ -113,6 +116,11 @@ fusion/protocol.h
 fusion/fusion.h
 fusion/arena.h
 fusion/object.h
+directfbgl.h
+directfb_version.h
+directfb.h
+directfb_util.h
+directfb_keynames.h
 dgiff.h
 direct/util.h
 direct/memcpy.h
@@ -199,6 +207,7 @@ ctime
 ctype.h
 curl/curl.h
 curl/easy.h
+curl/types.h
 curses.h
 cxxabi.h
 DateTimeUtils.h
@@ -268,11 +277,6 @@ freetype/ftoutln.h
 freetype/ttnameid.h
 freetype/tttables.h
 freetype/t1tables.h
-freetype/ftlcdfil.h
-freetype/ftsizes.h
-freetype/ftadvanc.h
-freetype/ftbitmap.h
-freetype/ftxf86.h
 fribidi/fribidi.h
 FSp_fopen.h
 fstream
@@ -306,9 +310,11 @@ gtk/gtkprintjob.h
 gtk/gtkprintunixdialog.h
 HIToolbox/HIToolbox.h
 hlink.h
+htiface.h
 ia64/sys/inline.h
 Icons.h
 iconv.h
+IDL.h
 ieeefp.h
 ifaddrs.h
 image.h
@@ -334,7 +340,6 @@ jar.h
 JavaControl.h
 JavaEmbedding/JavaControl.h
 JavaVM/jni.h
-jemalloc.h
 JManager.h
 JNIEnvTests.h
 jni.h
@@ -405,6 +410,7 @@ libgnomevfs/gnome-vfs-mime-handlers.h
 libgnomevfs/gnome-vfs-mime-utils.h
 libgnomevfs/gnome-vfs-ops.h
 libgnomevfs/gnome-vfs-standard-callbacks.h
+libIDL/IDL.h
 lib$routines.h
 libnotify/notify.h
 limits
@@ -531,7 +537,6 @@ nl_types.h
 NodeInfo.h
 nss.h
 nssilock.h
-nsswitch.h
 objbase.h
 objidl.h
 Objsafe.h
@@ -565,6 +570,14 @@ pcfs/pc_dir.h
 Pgenerr.h
 PGenErr.h
 Ph.h
+photon/Pg.h
+photon/PhProto.h
+photon/PhRender.h
+photon/PpProto.h
+photon/PtProgress.h
+photon/PtServer.h
+photon/PtWebClient.h
+photon/PxImage.h
 pk11func.h
 pk11pub.h
 pkcs11t.h
@@ -729,7 +742,6 @@ sys/pstat.h
 sys/ptrace.h
 sys/queue.h
 sys/quota.h
-sys/reboot.h
 sys/reg.h
 sys/regset.h
 sys/resource.h
@@ -752,7 +764,6 @@ sys/sysctl.h
 sys/sysinfo.h
 sys/sysmp.h
 sys/syssgi.h
-sys/system_properties.h
 sys/systeminfo.h
 sys/timeb.h
 sys/time.h
@@ -884,6 +895,7 @@ X11/cursorfont.h
 X11/extensions/Print.h
 X11/extensions/shape.h
 X11/extensions/scrnsaver.h
+X11/extensions/XIElib.h
 X11/extensions/XShm.h
 X11/extensions/Xrender.h
 X11/extensions/Xdamage.h
@@ -913,7 +925,6 @@ sechash.h
 secoidt.h
 certdb.h
 secerr.h
-nssutil.h
 nssb64.h
 secasn1.h
 secder.h
@@ -985,6 +996,15 @@ png.h
 #if MOZ_NATIVE_ZLIB==1
 zlib.h
 #endif
+#if MOZ_ENABLE_LIBXUL!=1
+#if BUILD_STATIC_LIBS!=1
+#define WRAP_LCMS_HEADERS
+#endif
+#endif
+#ifdef WRAP_LCMS_HEADERS
+icc34.h
+lcms.h
+#endif
 #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
 libsn/sn.h
 libsn/sn-common.h
@@ -1023,14 +1043,6 @@ proxy.h
 #if MOZ_PLATFORM_MAEMO==6
 contentaction/contentaction.h
 #endif
-#ifdef MOZ_ENABLE_CONTENTMANAGER
-SelectSingleContentItemPage.h
-SelectMultipleContentItemsPage.h
-QtSparql/qsparqlconnection.h
-QtSparql/qsparqlquery.h
-QtSparql/qsparqlresult.h
-#endif
-
 #if MOZ_TREE_PIXMAN!=1
 pixman.h
 #endif
@@ -1040,16 +1052,4 @@ shareuiinterface.h
 #if MOZ_NATIVE_LIBVPX==1
 vpx/vpx_decoder.h
 vpx/vp8dx.h
-#endif
-#ifdef XP_WIN
-vpx/vpx_decoder.h
-vpx/vp8dx.h
-sydneyaudio/sydney_audio.h
-vorbis/codec.h
-theora/theoradec.h
-tremor/ivorbiscodec.h
-ogg/ogg.h
-ogg/os_types.h
-nestegg/nestegg.h
-cubeb/cubeb.h
 #endif

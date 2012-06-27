@@ -26,27 +26,6 @@
 #ifndef WTF_Assertions_h
 #define WTF_Assertions_h
 
-#include "Platform.h"
-#include "mozilla/Assertions.h"
-
-#ifndef DEBUG
-   /*
-    * Prevent unused-variable warnings by defining the macro WTF uses to test
-    * for assertions taking effect.
-    */
-#  define ASSERT_DISABLED 1
-#endif
-
-#if 0 //James Chen closed, made it built successfully on win32.
-#define ASSERT(assertion) MOZ_ASSERT(assertion)
-#define ASSERT_UNUSED(variable, assertion) (((void)variable), ASSERT(assertion))
-#define ASSERT_NOT_REACHED() MOZ_NOT_REACHED("")
-#define CRASH() MOZ_Crash()
-#define COMPILE_ASSERT(exp, name) MOZ_STATIC_ASSERT(exp, #name)
-#endif
-
-
-#if 1 //James Chen opened, made it built successfully on win32.
 /*
    no namespaces because this file has to be includable from C and Objective-C
 
@@ -160,6 +139,14 @@ void WTFLogVerbose(const char* file, int line, const char* function, WTFLogChann
 #endif
 
 /* ASSERT, ASSERT_WITH_MESSAGE, ASSERT_NOT_REACHED */
+
+#if WTF_PLATFORM_WINCE && !WTF_PLATFORM_TORCHMOBILE
+/* FIXME: We include this here only to avoid a conflict with the ASSERT macro. */
+#include "jswin.h"
+#undef min
+#undef max
+#undef ERROR
+#endif
 
 #if WTF_PLATFORM_WIN_OS || WTF_PLATFORM_SYMBIAN
 /* FIXME: Change to use something other than ASSERT to avoid this conflict with the underlying platform */
@@ -279,8 +266,6 @@ while (0)
 #define LOG_VERBOSE(channel, arg...) ((void)0)
 #else
 #define LOG_VERBOSE(channel, ...) WTFLogVerbose(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, &JOIN_LOG_CHANNEL_WITH_PREFIX(LOG_CHANNEL_PREFIX, channel), __VA_ARGS__)
-#endif
-
 #endif
 
 #endif /* WTF_Assertions_h */

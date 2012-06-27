@@ -41,9 +41,10 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-
-#include "js/HashTable.h"
-#include "js/Vector.h"
+#include "jshashtable.h"
+#include "jsstdint.h"
+#include "jsvector.h"
+#include "jsvalue.h"
 
 namespace js {
 
@@ -63,7 +64,7 @@ struct SCOutput {
 
     bool write(uint64_t u);
     bool writePair(uint32_t tag, uint32_t data);
-    bool writeDouble(double d);
+    bool writeDouble(jsdouble d);
     bool writeBytes(const void *p, size_t nbytes);
     bool writeChars(const jschar *p, size_t nchars);
 
@@ -71,8 +72,6 @@ struct SCOutput {
     bool writeArray(const T *p, size_t nbytes);
 
     bool extractBuffer(uint64_t **datap, size_t *sizep);
-
-    uint64_t count() { return buf.length(); }
 
   private:
     JSContext *cx;
@@ -87,7 +86,7 @@ struct SCInput {
 
     bool read(uint64_t *p);
     bool readPair(uint32_t *tagp, uint32_t *datap);
-    bool readDouble(double *p);
+    bool readDouble(jsdouble *p);
     bool readBytes(void *p, size_t nbytes);
     bool readChars(jschar *p, size_t nchars);
 
@@ -100,7 +99,7 @@ struct SCInput {
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(jschar) == 2);
         JS_STATIC_ASSERT(sizeof(uint32_t) == 4);
-        JS_STATIC_ASSERT(sizeof(double) == 8);
+        JS_STATIC_ASSERT(sizeof(jsdouble) == 8);
     }
 
     JSContext *cx;
@@ -114,8 +113,7 @@ struct JSStructuredCloneReader {
   public:
     explicit JSStructuredCloneReader(js::SCInput &in, const JSStructuredCloneCallbacks *cb,
                                      void *cbClosure)
-        : in(in), objs(in.context()), allObjs(in.context()),
-          callbacks(cb), closure(cbClosure) { }
+        : in(in), objs(in.context()), callbacks(cb), closure(cbClosure) { }
 
     js::SCInput &input() { return in; }
     bool read(js::Value *vp);
@@ -123,7 +121,7 @@ struct JSStructuredCloneReader {
   private:
     JSContext *context() { return in.context(); }
 
-    bool checkDouble(double d);
+    bool checkDouble(jsdouble d);
     JSString *readString(uint32_t nchars);
     bool readTypedArray(uint32_t tag, uint32_t nelems, js::Value *vp);
     bool readArrayBuffer(uint32_t nbytes, js::Value *vp);
@@ -134,9 +132,6 @@ struct JSStructuredCloneReader {
 
     // Stack of objects with properties remaining to be read.
     js::AutoValueVector objs;
-
-    // Stack of all objects read during this deserialization
-    js::AutoValueVector allObjs;
 
     // The user defined callbacks that will be used for cloning.
     const JSStructuredCloneCallbacks *callbacks;
@@ -172,7 +167,7 @@ struct JSStructuredCloneWriter {
 
     js::SCOutput &out;
 
-    // Vector of objects with properties remaining to be written.
+    // Stack of objects with properties remaining to be written.
     js::AutoValueVector objs;
 
     // counts[i] is the number of properties of objs[i] remaining to be written.
@@ -183,10 +178,8 @@ struct JSStructuredCloneWriter {
     js::AutoIdVector ids;
 
     // The "memory" list described in the HTML5 internal structured cloning algorithm.
-    // memory is a superset of objs; items are never removed from Memory
-    // until a serialization operation is finished
-    typedef js::HashMap<JSObject *, uint32_t> CloneMemory;
-    CloneMemory memory;
+    // memory has the same elements as objs.
+    js::HashSet<JSObject *> memory;
 
     // The user defined callbacks that will be used for cloning.
     const JSStructuredCloneCallbacks *callbacks;

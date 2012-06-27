@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -42,35 +42,120 @@
 /*
  * JS Array interface.
  */
-#include "jscntxt.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsatom.h"
 #include "jsobj.h"
+#include "jsstr.h"
 
 /* Small arrays are dense, no matter what. */
-const unsigned MIN_SPARSE_INDEX = 256;
+const uintN MIN_SPARSE_INDEX = 256;
 
-namespace js {
-/* 2^32-2, inclusive */
-const uint32_t MAX_ARRAY_INDEX = 4294967294u;
+inline JSObject::EnsureDenseResult
+JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
+{
+    JS_ASSERT(isDenseArray());
+    uintN currentCapacity = numSlots();
+
+    uintN requiredCapacity;
+    if (extra == 1) {
+        /* Optimize for the common case. */
+        if (index < currentCapacity)
+            return ED_OK;
+        requiredCapacity = index + 1;
+        if (requiredCapacity == 0) {
+            /* Overflow. */
+            return ED_SPARSE;
+        }
+    } else {
+        requiredCapacity = index + extra;
+        if (requiredCapacity < index) {
+            /* Overflow. */
+            return ED_SPARSE;
+        }
+        if (requiredCapacity <= currentCapacity)
+            return ED_OK;
+    }
+
+    /*
+     * We use the extra argument also as a hint about number of non-hole
+     * elements to be inserted.
+     */
+    if (requiredCapacity > MIN_SPARSE_INDEX &&
+        willBeSparseDenseArray(requiredCapacity, extra)) {
+        return ED_SPARSE;
+    }
+    return growSlots(cx, requiredCapacity) ? ED_OK : ED_FAILED;
 }
 
+extern bool
+js_StringIsIndex(JSLinearString *str, jsuint *indexp);
+
 inline JSBool
-js_IdIsIndex(jsid id, uint32_t *indexp)
+js_IdIsIndex(jsid id, jsuint *indexp)
 {
     if (JSID_IS_INT(id)) {
-        int32_t i = JSID_TO_INT(id);
+        jsint i;
+        i = JSID_TO_INT(id);
         if (i < 0)
             return JS_FALSE;
-        *indexp = (uint32_t)i;
+        *indexp = (jsuint)i;
         return JS_TRUE;
     }
 
     if (JS_UNLIKELY(!JSID_IS_STRING(id)))
         return JS_FALSE;
 
-    return js::StringIsArrayIndex(JSID_TO_ATOM(id), indexp);
+    return js_StringIsIndex(JSID_TO_ATOM(id), indexp);
+}
+
+/* XML really wants to pretend jsvals are jsids. */
+inline bool
+js_IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
+{
+    if (JSVAL_IS_INT(id)) {
+        jsint i;
+        i = JSVAL_TO_INT(id);
+        if (i < 0) {
+            *isIndex = false;
+            return true;
+        }
+        *indexp = (jsuint)i;
+        *isIndex = true;
+        return true;
+    }
+
+    if (!JSVAL_IS_STRING(id)) {
+        *isIndex = false;
+        return true;
+    }
+
+    JSLinearString *str = JSVAL_TO_STRING(id)->ensureLinear(cx);
+    if (!str)
+        return false;
+
+    *isIndex = js_StringIsIndex(str, indexp);
+    return true;
+}
+
+extern js::Class js_ArrayClass, js_SlowArrayClass;
+
+inline bool
+JSObject::isDenseArray() const
+{
+    return getClass() == &js_ArrayClass;
+}
+
+inline bool
+JSObject::isSlowArray() const
+{
+    return getClass() == &js_SlowArrayClass;
+}
+
+inline bool
+JSObject::isArray() const
+{
+    return isDenseArray() || isSlowArray();
 }
 
 /*
@@ -92,8 +177,11 @@ js_IdIsIndex(jsid id, uint32_t *indexp)
  * Callers of js_GetProtoIfDenseArray must take care to use the original object
  * (obj) for the |this| value of a getter, setter, or method call (bug 476447).
  */
-inline JSObject *
-js_GetProtoIfDenseArray(JSObject *obj);
+static JS_INLINE JSObject *
+js_GetProtoIfDenseArray(JSObject *obj)
+{
+    return obj->isDenseArray() ? obj->getProto() : obj;
+}
 
 extern JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj);
@@ -101,98 +189,118 @@ js_InitArrayClass(JSContext *cx, JSObject *obj);
 extern bool
 js_InitContextBusyArrayTable(JSContext *cx);
 
-namespace js {
+namespace js
+{
 
 /* Create a dense array with no capacity allocated, length set to 0. */
 extern JSObject * JS_FASTCALL
 NewDenseEmptyArray(JSContext *cx, JSObject *proto=NULL);
 
-/* Create a dense array with length and capacity == 'length', initialized length set to 0. */
+/* Create a dense array with length and capacity == 'length'. */
 extern JSObject * JS_FASTCALL
-NewDenseAllocatedArray(JSContext *cx, uint32_t length, JSObject *proto=NULL);
-
-/*
- * Create a dense array with length, capacity and initialized length == 'length', and filled with holes.
- * This is a kludge, as the tracer doesn't yet track/update initialized length when initializing
- * array elements.
- */
-extern JSObject * JS_FASTCALL
-NewDenseAllocatedEmptyArray(JSContext *cx, uint32_t length, JSObject *proto=NULL);
+NewDenseAllocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
 
 /*
  * Create a dense array with a set length, but without allocating space for the
  * contents. This is useful, e.g., when accepting length from the user.
  */
 extern JSObject * JS_FASTCALL
-NewDenseUnallocatedArray(JSContext *cx, uint32_t length, JSObject *proto=NULL);
+NewDenseUnallocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
 
 /* Create a dense array with a copy of vp. */
 extern JSObject *
-NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *vp, JSObject *proto = NULL);
+NewDenseCopiedArray(JSContext *cx, uint length, Value *vp, JSObject *proto=NULL);
 
 /* Create a sparse array. */
 extern JSObject *
 NewSlowEmptyArray(JSContext *cx);
 
-} /* namespace js */
+}
 
 extern JSBool
-js_GetLengthProperty(JSContext *cx, JSObject *obj, uint32_t *lengthp);
+js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 extern JSBool
-js_SetLengthProperty(JSContext *cx, JSObject *obj, double length);
+js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length);
+
+extern JSBool
+js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
+
+extern JSBool JS_FASTCALL
+js_IndexToId(JSContext *cx, jsuint index, jsid *idp);
 
 namespace js {
 
-extern JSBool
-array_defineElement(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
-                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-
-extern JSBool
-array_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict);
-
 /*
- * Copy 'length' elements from aobj to vp.
- *
  * This function assumes 'length' is effectively the result of calling
  * js_GetLengthProperty on aobj.
  */
 extern bool
-GetElements(JSContext *cx, JSObject *aobj, uint32_t length, js::Value *vp);
+GetElements(JSContext *cx, JSObject *aobj, jsuint length, js::Value *vp);
 
-/* Natives exposed for optimization by the interpreter and JITs. */
+}
 
+/*
+ * JS-specific merge sort function.
+ */
+typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
+                               int *result);
+
+enum JSMergeSortElemType {
+    JS_SORTING_VALUES,
+    JS_SORTING_GENERIC
+};
+
+/*
+ * NB: vec is the array to be sorted, tmp is temporary space at least as big
+ * as vec. Both should be GC-rooted if appropriate.
+ *
+ * isValue should true iff vec points to an array of js::Value
+ *
+ * The sorted result is in vec. vec may be in an inconsistent state if the
+ * comparator function cmp returns an error inside a comparison, so remember
+ * to check the return value of this function.
+ */
+extern bool
+js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
+             void *arg, void *tmp, JSMergeSortElemType elemType);
+
+/*
+ * The Array.prototype.sort fast-native entry point is exported for joined
+ * function optimization in js{interp,tracer}.cpp.
+ */
+namespace js {
 extern JSBool
-array_sort(JSContext *cx, unsigned argc, js::Value *vp);
-
-extern JSBool
-array_push(JSContext *cx, unsigned argc, js::Value *vp);
-
-extern JSBool
-array_pop(JSContext *cx, unsigned argc, js::Value *vp);
-
-extern JSBool
-array_concat(JSContext *cx, unsigned argc, js::Value *vp);
-
-extern JSBool
-array_shift(JSContext *cx, unsigned argc, js::Value *vp);
-
-} /* namespace js */
+array_sort(JSContext *cx, uintN argc, js::Value *vp);
+}
 
 #ifdef DEBUG
 extern JSBool
-js_ArrayInfo(JSContext *cx, unsigned argc, jsval *vp);
+js_ArrayInfo(JSContext *cx, uintN argc, jsval *vp);
 #endif
 
-/*
- * Append the given (non-hole) value to the end of an array.  The array must be
- * a newborn array -- that is, one which has not been exposed to script for
- * arbitrary manipulation.  (This method optimizes on the assumption that
- * extending the array to accommodate the element will never make the array
- * sparse, which requires that the array be completely filled.)
- */
 extern JSBool
-js_NewbornArrayPush(JSContext *cx, JSObject *obj, const js::Value &v);
+js_ArrayCompPush(JSContext *cx, JSObject *obj, const js::Value &vp);
+
+/*
+ * Fast dense-array-to-buffer conversion for use by canvas.
+ *
+ * If the array is a dense array, fill [offset..offset+count] values into
+ * destination, assuming that types are consistent.  Return JS_TRUE if
+ * successful, otherwise JS_FALSE -- note that the destination buffer may be
+ * modified even if JS_FALSE is returned (e.g. due to finding an inappropriate
+ * type later on in the array).  If JS_FALSE is returned, no error conditions
+ * or exceptions are set on the context.
+ *
+ * This method succeeds if each element of the array is an integer or a double.
+ * Values outside the 0-255 range are clamped to that range.  Double values are
+ * converted to integers in this range by clamping and then rounding to
+ * nearest, ties to even.
+ */
+
+JS_FRIEND_API(JSBool)
+js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
+                                JSUint8 *dest);
 
 JSBool
 js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
@@ -206,6 +314,29 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, jsid id,
 
 /* Array constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Array(JSContext *cx, unsigned argc, js::Value *vp);
+js_Array(JSContext *cx, uintN argc, js::Value *vp);
+
+/*
+ * Makes a fast clone of a dense array as long as the array only contains
+ * primitive values.
+ *
+ * If the return value is JS_FALSE then clone will not be set.
+ *
+ * If the return value is JS_TRUE then clone will either be set to the address
+ * of a new JSObject or to NULL if the array was not dense or contained values
+ * that were not primitives.
+ */
+JS_FRIEND_API(JSBool)
+js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone);
+
+/*
+ * Returns JS_TRUE if the given object is a dense array that contains only
+ * primitive values.
+ */
+JS_FRIEND_API(JSBool)
+js_IsDensePrimitiveArray(JSObject *obj);
+
+extern JSBool JS_FASTCALL
+js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i);
 
 #endif /* jsarray_h___ */

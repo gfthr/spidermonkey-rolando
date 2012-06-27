@@ -1,11 +1,11 @@
 #include "tests.h"
 
-#include "jsclass.h"
+#include "jsvalue.h"
 
 int count = 0;
 
 static JSBool
-IterNext(JSContext *cx, unsigned argc, jsval *vp)
+IterNext(JSContext *cx, uintN argc, jsval *vp)
 {
     if (count++ == 100)
         return JS_ThrowStopIteration(cx);
@@ -27,17 +27,19 @@ IterHook(JSContext *cx, JSObject *obj, JSBool keysonly)
 js::Class HasCustomIterClass = {
     "HasCustomIter",
     0,
-    JS_PropertyStub,
-    JS_PropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
+    js::PropertyStub,
+    js::PropertyStub,
+    js::PropertyStub,
+    js::StrictPropertyStub,
+    js::EnumerateStub,
+    js::ResolveStub,
+    js::ConvertStub,
     NULL,
+    NULL, /* reserved0 */
     NULL, /* checkAccess */
     NULL, /* call */
     NULL, /* construct */
+    NULL, /* xdrObject */
     NULL, /* hasInstance */
     NULL, /* mark */
     {
@@ -50,7 +52,7 @@ js::Class HasCustomIterClass = {
 };
 
 JSBool
-IterClassConstructor(JSContext *cx, unsigned argc, jsval *vp)
+IterClassConstructor(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj = JS_NewObjectForConstructor(cx, vp);
     if (!obj)
@@ -71,8 +73,8 @@ BEGIN_TEST(testCustomIterator_bug612523)
          "j;", &result);
 
     CHECK(JSVAL_IS_INT(result));
-    CHECK_EQUAL(JSVAL_TO_INT(result), 100);
-    CHECK_EQUAL(count, 101);
+    CHECK(JSVAL_TO_INT(result) == 100);
+    CHECK(count == 101);
 
     return true;
 }

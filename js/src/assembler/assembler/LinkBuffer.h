@@ -62,36 +62,33 @@ class LinkBuffer {
     typedef MacroAssembler::DataLabelPtr DataLabelPtr;
 
 public:
-    // 'ok' should be checked after this constructor is called;  it's false if OOM occurred.
-    LinkBuffer(MacroAssembler* masm, ExecutableAllocator* executableAllocator,
-               ExecutablePool** poolp, bool* ok, CodeKind codeKind)
-    {
-        m_codeKind = codeKind;
-        m_code = executableAllocAndCopy(*masm, executableAllocator, poolp);
-        m_executablePool = *poolp;
-        m_size = masm->m_assembler.size();  // must come after call to executableAllocAndCopy()!
-#ifndef NDEBUG
-        m_completed = false;
-#endif
-        *ok = !!m_code;
-    }
-
-    LinkBuffer(CodeKind kind)
-        : m_executablePool(NULL)
-        , m_code(NULL)
-        , m_size(0)
-        , m_codeKind(kind)
+    // Note: Initialization sequence is significant, since executablePool is a PassRefPtr.
+    //       First, executablePool is copied into m_executablePool, then the initialization of
+    //       m_code uses m_executablePool, *not* executablePool, since this is no longer valid.
+    LinkBuffer(MacroAssembler* masm, ExecutablePool* executablePool)
+        : m_executablePool(executablePool)
+        , m_code(executableCopy(*masm, executablePool))
+        , m_size(masm->m_assembler.size())
 #ifndef NDEBUG
         , m_completed(false)
 #endif
     {
     }
 
-    LinkBuffer(uint8_t* ncode, size_t size, CodeKind kind)
+    LinkBuffer()
+        : m_executablePool(NULL)
+        , m_code(NULL)
+        , m_size(0)
+#ifndef NDEBUG
+        , m_completed(false)
+#endif
+    {
+    }
+
+    LinkBuffer(uint8* ncode, size_t size)
         : m_executablePool(NULL)
         , m_code(ncode)
         , m_size(size)
-        , m_codeKind(kind)
 #ifndef NDEBUG
         , m_completed(false)
 #endif
@@ -200,10 +197,9 @@ protected:
         return m_code;
     }
 
-    void *executableAllocAndCopy(MacroAssembler &masm, ExecutableAllocator *allocator,
-                                 ExecutablePool **poolp)
+    void *executableCopy(MacroAssembler &masm, ExecutablePool *pool)
     {
-        return masm.m_assembler.executableAllocAndCopy(allocator, poolp, m_codeKind);
+        return masm.m_assembler.executableCopy(pool);
     }
 
     void performFinalization()
@@ -220,7 +216,6 @@ protected:
     ExecutablePool* m_executablePool;
     void* m_code;
     size_t m_size;
-    CodeKind m_codeKind;
 #ifndef NDEBUG
     bool m_completed;
 #endif

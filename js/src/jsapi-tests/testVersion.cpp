@@ -2,9 +2,6 @@
 #include "jsscript.h"
 #include "jscntxt.h"
 
-#include "jscntxtinlines.h"
-#include "jsobjinlines.h"
-
 using namespace js;
 
 struct VersionFixture;
@@ -16,22 +13,21 @@ struct VersionFixture;
 
 static VersionFixture *callbackData = NULL;
 
-JSBool CheckVersionHasXML(JSContext *cx, unsigned argc, jsval *vp);
-JSBool DisableXMLOption(JSContext *cx, unsigned argc, jsval *vp);
-JSBool CallSetVersion17(JSContext *cx, unsigned argc, jsval *vp);
-JSBool CheckNewScriptNoXML(JSContext *cx, unsigned argc, jsval *vp);
-JSBool OverrideVersion15(JSContext *cx, unsigned argc, jsval *vp);
-JSBool CaptureVersion(JSContext *cx, unsigned argc, jsval *vp);
-JSBool CheckOverride(JSContext *cx, unsigned argc, jsval *vp);
-JSBool EvalScriptVersion16(JSContext *cx, unsigned argc, jsval *vp);
+JSBool CheckVersionHasXML(JSContext *cx, uintN argc, jsval *vp);
+JSBool DisableXMLOption(JSContext *cx, uintN argc, jsval *vp);
+JSBool CallSetVersion17(JSContext *cx, uintN argc, jsval *vp);
+JSBool CheckNewScriptNoXML(JSContext *cx, uintN argc, jsval *vp);
+JSBool OverrideVersion15(JSContext *cx, uintN argc, jsval *vp);
+JSBool CaptureVersion(JSContext *cx, uintN argc, jsval *vp);
+JSBool CheckOverride(JSContext *cx, uintN argc, jsval *vp);
+JSBool EvalScriptVersion16(JSContext *cx, uintN argc, jsval *vp);
 
 struct VersionFixture : public JSAPITest
 {
     JSVersion captured;
 
     virtual bool init() {
-        if (!JSAPITest::init())
-            return false;
+        JSAPITest::init();
         callbackData = this;
         captured = JSVERSION_UNKNOWN;
         return JS_DefineFunction(cx, global, "checkVersionHasXML", CheckVersionHasXML, 0, 0) &&
@@ -45,11 +41,11 @@ struct VersionFixture : public JSAPITest
                                  EvalScriptVersion16, 0, 0);
     }
 
-    JSScript *fakeScript(const char *contents, size_t length) {
+    JSObject *fakeScript(const char *contents, size_t length) {
         return JS_CompileScript(cx, global, contents, length, "<test>", 1);
     }
 
-    bool hasXML(unsigned version) {
+    bool hasXML(uintN version) {
         return VersionHasXML(JSVersion(version));
     }
 
@@ -78,9 +74,9 @@ struct VersionFixture : public JSAPITest
 
     /* Check that script compilation results in a version without XML. */
     bool checkNewScriptNoXML() {
-        JSScript *script = fakeScript("", 0);
-        CHECK(script);
-        CHECK(!hasXML(script->getVersion()));
+        JSObject *scriptObj = fakeScript("", 0);
+        CHECK(scriptObj);
+        CHECK(!hasXML(JS_GetScriptFromObject(scriptObj)->getVersion()));
         return true;
     }
 
@@ -104,9 +100,9 @@ struct VersionFixture : public JSAPITest
     }
 
     bool toggleXML(bool shouldEnable) {
-        CHECK_EQUAL(hasXML(), !shouldEnable);
+        CHECK(hasXML() == !shouldEnable);
         JS_ToggleOptions(cx, JSOPTION_XML);
-        CHECK_EQUAL(hasXML(), shouldEnable);
+        CHECK(hasXML() == shouldEnable);
         return true;
     }
 
@@ -122,31 +118,31 @@ struct VersionFixture : public JSAPITest
 /* Callbacks to throw into JS-land. */
 
 JSBool
-CallSetVersion17(JSContext *cx, unsigned argc, jsval *vp)
+CallSetVersion17(JSContext *cx, uintN argc, jsval *vp)
 {
     return callbackData->setVersion(JSVERSION_1_7);
 }
 
 JSBool
-CheckVersionHasXML(JSContext *cx, unsigned argc, jsval *vp)
+CheckVersionHasXML(JSContext *cx, uintN argc, jsval *vp)
 {
     return callbackData->checkVersionHasXML();
 }
 
 JSBool
-DisableXMLOption(JSContext *cx, unsigned argc, jsval *vp)
+DisableXMLOption(JSContext *cx, uintN argc, jsval *vp)
 {
     return callbackData->disableXMLOption();
 }
 
 JSBool
-CheckNewScriptNoXML(JSContext *cx, unsigned argc, jsval *vp)
+CheckNewScriptNoXML(JSContext *cx, uintN argc, jsval *vp)
 {
     return callbackData->checkNewScriptNoXML();
 }
 
 JSBool
-OverrideVersion15(JSContext *cx, unsigned argc, jsval *vp)
+OverrideVersion15(JSContext *cx, uintN argc, jsval *vp)
 {
     if (!callbackData->setVersion(JSVERSION_1_5))
         return false;
@@ -154,7 +150,7 @@ OverrideVersion15(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 JSBool
-EvalScriptVersion16(JSContext *cx, unsigned argc, jsval *vp)
+EvalScriptVersion16(JSContext *cx, uintN argc, jsval *vp)
 {
     JS_ASSERT(argc == 1);
     jsval *argv = JS_ARGV(cx, vp);
@@ -167,14 +163,14 @@ EvalScriptVersion16(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 JSBool
-CaptureVersion(JSContext *cx, unsigned argc, jsval *vp)
+CaptureVersion(JSContext *cx, uintN argc, jsval *vp)
 {
     callbackData->captured = JS_GetVersion(cx);
     return true;
 }
 
 JSBool
-CheckOverride(JSContext *cx, unsigned argc, jsval *vp)
+CheckOverride(JSContext *cx, uintN argc, jsval *vp)
 {
     JS_ASSERT(argc == 1);
     jsval *argv = JS_ARGV(cx, vp);
@@ -199,9 +195,9 @@ BEGIN_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
         "disableXMLOption();"
         "callSetVersion17();"
         "checkNewScriptNoXML();";
-    JSScript *toActivate = fakeScript(toActivateChars, sizeof(toActivateChars) - 1);
+    JSObject *toActivate = fakeScript(toActivateChars, sizeof(toActivateChars) - 1);
     CHECK(toActivate);
-    CHECK(hasXML(toActivate));
+    CHECK(hasXML(JS_GetScriptFromObject(toActivate)));
 
     disableXML();
 
@@ -221,13 +217,13 @@ END_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
 BEGIN_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
 {
     EXEC("overrideVersion15(); evalScriptVersion16('checkOverride(false); captureVersion()');");
-    CHECK_EQUAL(captured, JSVERSION_1_6);
+    CHECK(captured == JSVERSION_1_6);
 
     /* 
      * Override gets propagated to default version as non-override when you leave the VM's execute
      * call.
      */
-    CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_1_5);
+    CHECK(JS_GetVersion(cx) == JSVERSION_1_5);
     CHECK(!cx->isVersionOverridden());
     return true;
 }
@@ -241,28 +237,28 @@ END_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
  */
 BEGIN_FIXTURE_TEST(VersionFixture, testReturnLosesOverride)
 {
-    CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_ECMA_5);
+    CHECK(JS_GetVersion(cx) == JSVERSION_ECMA_5);
     EXEC(
         "checkOverride(false);"
         "evalScriptVersion16('overrideVersion15();');"
         "checkOverride(false);"
         "captureVersion();"
     );
-    CHECK_EQUAL(captured, JSVERSION_ECMA_5);
+    CHECK(captured == JSVERSION_ECMA_5);
     return true;
 }
 END_FIXTURE_TEST(VersionFixture, testReturnLosesOverride)
 
 BEGIN_FIXTURE_TEST(VersionFixture, testEvalPropagatesOverride)
 {
-    CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_ECMA_5);
+    CHECK(JS_GetVersion(cx) == JSVERSION_ECMA_5);
     EXEC(
         "checkOverride(false);"
         "eval('overrideVersion15();');"
         "checkOverride(true);"
         "captureVersion();"
     );
-    CHECK_EQUAL(captured, JSVERSION_1_5);
+    CHECK(captured == JSVERSION_1_5);
     return true;
 }
 END_FIXTURE_TEST(VersionFixture, testEvalPropagatesOverride)

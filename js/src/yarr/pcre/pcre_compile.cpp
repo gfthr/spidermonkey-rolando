@@ -44,8 +44,8 @@ supporting internal functions that are not used by other modules. */
 #include "pcre_internal.h"
 
 #include <string.h>
-#include "yarr/ASCIICType.h"
-#include "js/Vector.h"
+#include "yarr/wtf/ASCIICType.h"
+#include "jsvector.h"
 
 using namespace WTF;
 
@@ -1508,7 +1508,7 @@ compileBranch(int options, int* brackets, unsigned char** codePtr,
                         goto FAILED;
                     unsigned enclosedBrackets = (*brackets - bracketsBeforeRecursion);
                     unsigned limitBracket = minBracket + enclosedBrackets + (bravalue > OP_BRA);
-                    if (!((minBracket & 0x1ff) == minBracket && (limitBracket & 0x1ff) == limitBracket)) {
+                    if (!((minBracket & 0xff) == minBracket && (limitBracket & 0xff) == limitBracket)) {
                         *errorCodePtr = ERR17;
                         return false;
                     }
@@ -2588,7 +2588,9 @@ JSRegExp* jsRegExpCompile(const UChar* pattern, int patternLength,
         return returnError(ERR16, error);
     
     size_t size = length + sizeof(JSRegExp);
-    JSRegExp* re = reinterpret_cast<JSRegExp*>(js::OffTheBooks::array_new<char>(size));
+    // FIXME: bug 574459 -- no NULL check
+    JSRegExp* re = reinterpret_cast<JSRegExp*>(js_array_new<char>(size));
+    
     if (!re)
         return returnError(ERR13, error);
     
@@ -2643,7 +2645,7 @@ JSRegExp* jsRegExpCompile(const UChar* pattern, int patternLength,
     /* Failed to compile, or error while post-processing */
     
     if (errorcode != ERR0) {
-        js::Foreground::array_delete(reinterpret_cast<char*>(re));
+        js_array_delete(reinterpret_cast<char*>(re));
         return returnError(errorcode, error);
     }
     
@@ -2698,5 +2700,5 @@ JSRegExp* jsRegExpCompile(const UChar* pattern, int patternLength,
 
 void jsRegExpFree(JSRegExp* re)
 {
-    js::Foreground::array_delete(reinterpret_cast<char*>(re));
+    js_array_delete(reinterpret_cast<char*>(re));
 }

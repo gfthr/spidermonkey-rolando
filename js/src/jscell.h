@@ -40,78 +40,58 @@
 #ifndef jscell_h___
 #define jscell_h___
 
-#include "jspubtd.h"
-
 struct JSCompartment;
 
 namespace js {
 namespace gc {
 
-struct ArenaHeader;
+template <typename T> struct Arena;
+struct ArenaBitmap;
+struct MarkingDelay;
 struct Chunk;
-
-/* The GC allocation kinds. */
-enum AllocKind {
-    FINALIZE_OBJECT0,
-    FINALIZE_OBJECT0_BACKGROUND,
-    FINALIZE_OBJECT2,
-    FINALIZE_OBJECT2_BACKGROUND,
-    FINALIZE_OBJECT4,
-    FINALIZE_OBJECT4_BACKGROUND,
-    FINALIZE_OBJECT8,
-    FINALIZE_OBJECT8_BACKGROUND,
-    FINALIZE_OBJECT12,
-    FINALIZE_OBJECT12_BACKGROUND,
-    FINALIZE_OBJECT16,
-    FINALIZE_OBJECT16_BACKGROUND,
-    FINALIZE_OBJECT_LAST = FINALIZE_OBJECT16_BACKGROUND,
-    FINALIZE_SCRIPT,
-    FINALIZE_SHAPE,
-    FINALIZE_BASE_SHAPE,
-    FINALIZE_TYPE_OBJECT,
-#if JS_HAS_XML_SUPPORT
-    FINALIZE_XML,
-#endif
-    FINALIZE_SHORT_STRING,
-    FINALIZE_STRING,
-    FINALIZE_EXTERNAL_STRING,
-    FINALIZE_LAST = FINALIZE_EXTERNAL_STRING
-};
-
-static const unsigned FINALIZE_LIMIT = FINALIZE_LAST + 1;
-static const unsigned FINALIZE_OBJECT_LIMIT = FINALIZE_OBJECT_LAST + 1;
+struct FreeCell;
 
 /*
- * Live objects are marked black. How many other additional colors are available
- * depends on the size of the GCThing. Objects marked gray are eligible for
- * cycle collection.
+ * A GC cell is the base class for GC Things like JSObject, JSShortString,
+ * JSFunction, JSXML and for an empty cell called FreeCell. It helps avoiding 
+ * casts from an Object to a Cell whenever we call GC related mark functions.
+ * Cell is not the base Class for JSString because static initialization
+ * (used for unitStringTables) does not work with inheritance.
  */
-static const uint32_t BLACK = 0;
-static const uint32_t GRAY = 1;
 
-/*
- * A GC cell is the base class for all GC things.
- */
 struct Cell {
     static const size_t CellShift = 3;
     static const size_t CellSize = size_t(1) << CellShift;
     static const size_t CellMask = CellSize - 1;
 
-    inline uintptr_t address() const;
-    inline ArenaHeader *arenaHeader() const;
+    inline Arena<Cell> *arena() const;
     inline Chunk *chunk() const;
-    inline AllocKind getAllocKind() const;
+    inline ArenaBitmap *bitmap() const;
+    JS_ALWAYS_INLINE size_t cellIndex() const;
 
-    JS_ALWAYS_INLINE bool isMarked(uint32_t color = BLACK) const;
-    JS_ALWAYS_INLINE bool markIfUnmarked(uint32_t color = BLACK) const;
-    JS_ALWAYS_INLINE void unmark(uint32_t color) const;
+    JS_ALWAYS_INLINE bool isMarked(uint32 color) const;
+    JS_ALWAYS_INLINE bool markIfUnmarked(uint32 color) const;
+    JS_ALWAYS_INLINE void unmark(uint32 color) const;
 
     inline JSCompartment *compartment() const;
 
-#ifdef DEBUG
-    inline bool isAligned() const;
-#endif
+    /* Needed for compatibility reasons because Cell can't be a base class of JSString */
+    JS_ALWAYS_INLINE js::gc::Cell *asCell() { return this; }
+
+    JS_ALWAYS_INLINE js::gc::FreeCell *asFreeCell() {
+        return reinterpret_cast<FreeCell *>(this);
+    }
 };
+
+/* FreeCell has always size 8 */
+struct FreeCell : Cell {
+    union {
+        FreeCell *link;
+        double data;
+    };
+};
+
+JS_STATIC_ASSERT(sizeof(FreeCell) == 8);
 
 } /* namespace gc */
 } /* namespace js */

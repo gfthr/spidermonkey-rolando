@@ -37,13 +37,13 @@
 
 
 extern js_InternalThrow:PROC
+extern SetVMFrameRegs:PROC
 extern PushActiveVMFrame:PROC
 extern PopActiveVMFrame:PROC
-extern js_InternalInterpret:PROC
 
 .CODE
 
-; JSBool JaegerTrampoline(JSContext *cx, StackFrame *fp, void *code,
+; JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
 ;                         Value *stackLimit, void *safePoint);
 JaegerTrampoline PROC FRAME
     push    rbp
@@ -75,8 +75,6 @@ JaegerTrampoline PROC FRAME
     ; rdx = fp
     ; r9 = inlineCallCount
     ; fp must go into rbx
-    push    0       ; stubRejoin
-    push    rdx     ; entryncode
     push    rdx     ; entryFp 
     push    r9      ; inlineCallCount 
     push    rcx     ; cx
@@ -94,6 +92,8 @@ JaegerTrampoline PROC FRAME
     push    r8
     mov     rcx, rsp
     sub     rsp, 20h
+    call    SetVMFrameRegs
+    lea     rcx, [rsp+20h]
     call    PushActiveVMFrame
     add     rsp, 20h
 
@@ -104,13 +104,13 @@ JaegerTrampoline ENDP
 ; void JaegerTrampolineReturn();
 JaegerTrampolineReturn PROC FRAME
     .ENDPROLOG
-    or      rsi, rdi
-    mov     qword ptr [rbx+30h], rsi
+    or      rcx, rdx
+    mov     qword ptr [rbx + 30h], rcx
     sub     rsp, 20h
     lea     rcx, [rsp+20h]
     call    PopActiveVMFrame
 
-    add     rsp, 68h+20h
+    add     rsp, 58h+20h
     pop     rbx
     pop     rsi
     pop     rdi
@@ -139,7 +139,7 @@ JaegerThrowpoline PROC FRAME
 throwpoline_exit:
     lea     rcx, [rsp+20h]
     call    PopActiveVMFrame
-    add     rsp, 68h+20h
+    add     rsp, 58h+20h
     pop     rbx
     pop     rsi
     pop     rdi
@@ -152,54 +152,24 @@ throwpoline_exit:
     ret
 JaegerThrowpoline ENDP
 
-JaegerInterpoline PROC FRAME
+
+
+; void InjectJaegerReturn();
+InjectJaegerReturn PROC FRAME
     .ENDPROLOG
-    mov     rcx, rdi
-    mov     rdx, rsi
-    lea     r9, [rsp+20h]
-    mov     r8, rax
-    call    js_InternalInterpret
-    mov     rbx, qword ptr [rsp+38h+20h] ; Load Frame
-    mov     rsi, qword ptr [rbx+30h]     ; Load rval payload
-    and     rsi, r14                     ; Mask rval payload
-    mov     rdi, qword ptr [rbx+30h]     ; Load rval type
-    and     rdi, r13                     ; Mask rval type
-    mov     rcx, qword ptr [rsp+18h+20h] ; Load scratch -> argc
-    test    rax, rax
-    je      interpoline_exit
+    mov     rcx, qword ptr [rbx+30h] ; load fp->rval_ into typeReg
+    mov     rax, qword ptr [rbx+28h] ; fp->ncode_
+
+    ; Reimplementation of PunboxAssembler::loadValueAsComponents()
+    mov     rdx, r14
+    and     rdx, rcx
+    xor     rcx, rdx
+
+    ; For Windows x64 stub calls, we pad the stack by 32 before
+    ; calling, so we must account for that here. See doStubCall.
+    mov     rbx, qword ptr [rsp+38h+20h] ; f.fp
     add     rsp, 20h
-    jmp     rax
-
-interpoline_exit:
-    lea     rcx, [rsp+20h]
-    call    PopActiveVMFrame
-    add     rsp, 68h+20h
-    pop     rbx
-    pop     rsi
-    pop     rdi
-    pop     r15
-    pop     r14
-    pop     r13
-    pop     r12
-    pop     rbp
-    xor     rax, rax
-    ret
-JaegerInterpoline ENDP
-
-JaegerInterpolineScripted PROC FRAME
-    .ENDPROLOG
-    mov     rbx, qword ptr [rbx+20h] ; Load prev
-    mov     qword ptr [rsp+38h], rbx ; fp -> regs.fp
-    sub     rsp, 20h
-    jmp     JaegerInterpoline
-JaegerInterpolineScripted ENDP
-
-JaegerInterpolinePatched PROC FRAME
-    sub     rsp, 20h
-    .ALLOCSTACK 32
-    .ENDPROLOG
-    jmp     JaegerInterpoline
-JaegerInterpolinePatched ENDP
-
+    jmp     rax            ; return
+InjectJaegerReturn ENDP
 
 END

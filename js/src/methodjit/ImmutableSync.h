@@ -70,7 +70,7 @@ class ImmutableSync
          *
          * They are separated for readability.
          */
-        uint32_t generation;
+        uint32 generation;
         bool dataClobbered;
         bool typeClobbered;
         bool hasDataReg;
@@ -80,7 +80,7 @@ class ImmutableSync
         RegisterID typeReg;
         JSValueType type;
 
-        void reset(uint32_t gen) {
+        void reset(uint32 gen) {
             dataClobbered = false;
             typeClobbered = false;
             hasDataReg = false;
@@ -91,9 +91,9 @@ class ImmutableSync
     };
 
   public:
-    ImmutableSync();
+    ImmutableSync(JSContext *cx, const FrameState &frame);
     ~ImmutableSync();
-    bool init(JSContext *cx, const FrameState &frame, uint32_t nentries);
+    bool init(uint32 nentries);
 
     void reset(Assembler *masm, Registers avail, FrameEntry *top, FrameEntry *bottom);
     void sync(FrameEntry *fe);
@@ -103,12 +103,7 @@ class ImmutableSync
     void syncNormal(FrameEntry *fe);
     RegisterID ensureDataReg(FrameEntry *fe, SyncEntry &e);
     RegisterID ensureTypeReg(FrameEntry *fe, SyncEntry &e);
-
     RegisterID allocReg();
-    void freeReg(RegisterID reg);
-
-    /* To be called only by allocReg. */
-    RegisterID doAllocReg();
 
     inline SyncEntry &entryFor(FrameEntry *fe);
 
@@ -118,14 +113,14 @@ class ImmutableSync
   private:
     JSContext *cx;
     SyncEntry *entries;
-    const FrameState *frame;
-    uint32_t nentries;
+    const FrameState &frame;
+    uint32 nentries;
     Registers avail;
     Assembler *masm;
     SyncEntry *regs[Assembler::TotalRegisters];
     FrameEntry *top;
     FrameEntry *bottom;
-    uint32_t generation;
+    uint32 generation;
 };
 
 } /* namespace mjit */

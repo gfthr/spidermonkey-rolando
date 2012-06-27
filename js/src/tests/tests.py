@@ -7,8 +7,6 @@ import datetime, os, re, sys, time
 from subprocess import *
 from threading import *
 
-from results import TestOutput
-
 def do_run_cmd(cmd):
     l = [ None, None ]
     th_run_cmd(cmd, l)
@@ -19,7 +17,7 @@ def set_limits():
     try:
         import resource
         GB = 2**30
-        resource.setrlimit(resource.RLIMIT_AS, (2*GB, 2*GB))
+        resource.setrlimit(resource.RLIMIT_AS, (1*GB, 1*GB))
     except:
         return
 
@@ -46,7 +44,6 @@ def run_cmd(cmd, timeout=60.0):
         return do_run_cmd(cmd)
 
     l = [ None, None ]
-    timed_out = False
     th = Thread(target=th_run_cmd, args=(cmd, l))
     th.start()
     th.join(timeout)
@@ -58,12 +55,11 @@ def run_cmd(cmd, timeout=60.0):
                 if sys.platform != 'win32':
                     os.kill(l[0].pid, signal.SIGKILL)
                 time.sleep(.1)
-                timed_out = True
-            except OSError, e:
+            except OSError:
                 # Expecting a "No such process" error
                 pass
     th.join()
-    return l[1] + (timed_out,)
+    return l[1]
 
 class Test(object):
     """A runnable test."""
@@ -79,30 +75,24 @@ class Test(object):
         return Test.prefix_command(head) + [ '-f', os.path.join(path, 'shell.js') ]
 
     def get_command(self, js_cmd_prefix):
-        dirname, filename = os.path.split(self.path)
-        cmd = js_cmd_prefix + Test.prefix_command(dirname)
-        if self.debugMode:
-            cmd += [ '-d' ]
+        dir, filename = os.path.split(self.path)
         # There is a test that requires the path to start with './'.
-        cmd += [ '-f', './' + self.path ]
-        return cmd
+        return js_cmd_prefix + Test.prefix_command(dir) + [ '-f', './' + self.path ]
 
     def run(self, js_cmd_prefix, timeout=30.0):
         cmd = self.get_command(js_cmd_prefix)
-        out, err, rc, dt, timed_out = run_cmd(cmd, timeout)
-        return TestOutput(self, cmd, out, err, rc, dt, timed_out)
+        out, err, rc, dt = run_cmd(cmd, timeout)
+        return TestOutput(self, cmd, out, err, rc, dt);
 
 class TestCase(Test):
     """A test case consisting of a test and an expected result."""
-    js_cmd_prefix = None
 
-    def __init__(self, path, enable, expect, random, slow, debugMode):
+    def __init__(self, path, enable, expect, random, slow):
         Test.__init__(self, path)
         self.enable = enable     # bool: True => run test, False => don't run
         self.expect = expect     # bool: expected result, True => pass
         self.random = random     # bool: True => ignore output as 'random'
         self.slow = slow         # bool: True => test may run slowly
-        self.debugMode = debugMode # bool: True => must be run in debug mode
 
     def __str__(self):
         ans = self.path
@@ -114,16 +104,77 @@ class TestCase(Test):
             ans += ', random'
         if self.slow:
             ans += ', slow'
-        if self.debugMode:
-            ans += ', debugMode'
         return ans
 
+class TestOutput:
+    """Output from a test run."""
+    def __init__(self, test, cmd, out, err, rc, dt):
+        self.test = test   # Test
+        self.cmd = cmd     # str:   command line of test
+        self.out = out     # str:   stdout
+        self.err = err     # str:   stderr
+        self.rc = rc       # int:   return code
+        self.dt = dt       # float: run time
+
+class NullTestOutput:
+    """Variant of TestOutput that indicates a test was not run."""
+    def __init__(self, test):
+        self.test = test
+        self.cmd = ''
+        self.out = ''
+        self.err = ''
+        self.rc = 0
+        self.dt = 0.0
+
+class TestResult:
+    PASS = 'PASS'
+    FAIL = 'FAIL'
+    CRASH = 'CRASH'
+
+    """Classified result from a test run."""
+    def __init__(self, test, result, results):
+        self.test = test
+        self.result = result
+        self.results = results
+
     @classmethod
-    def set_js_cmd_prefix(self, js_path, js_args, debugger_prefix):
-        parts = []
-        if debugger_prefix:
-            parts += debugger_prefix
-        parts.append(js_path)
-        if js_args:
-            parts += js_args
-        self.js_cmd_prefix = parts
+    def from_output(cls, output):
+        test = output.test
+        result = None          # str:      overall result, see class-level variables
+        results = []           # (str,str) list: subtest results (pass/fail, message)
+
+        out, rc = output.out, output.rc
+
+        failures = 0
+        passes = 0
+
+        expected_rcs = []
+        if test.path.endswith('-n.js'):
+            expected_rcs.append(3)
+
+        for line in out.split('\n'):
+            if line.startswith(' FAILED!'):
+                failures += 1
+                msg = line[len(' FAILED! '):]
+                results.append((cls.FAIL, msg))
+            elif line.startswith(' PASSED!'):
+                passes += 1
+                msg = line[len(' PASSED! '):]
+                results.append((cls.PASS, msg))
+            else:
+                m = re.match('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ((?:-|\\d)+) ---', line)
+                if m:
+                    expected_rcs.append(int(m.group(1)))
+
+        if rc and not rc in expected_rcs:
+            if rc == 3:
+                result = cls.FAIL
+            else:
+                result = cls.CRASH
+        else:
+            if (rc or passes > 0) and failures == 0:
+                result = cls.PASS
+            else:
+                result = cls.FAIL
+
+        return cls(test, result, results)

@@ -43,10 +43,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
+#include "jsstdint.h"
+#include "jsbit.h"
 #include "jsutil.h"
 #include "jshash.h"
-
-using namespace js;
 
 /* Compute the number of buckets in ht */
 #define NBUCKETS(ht)    JS_BIT(JS_HASH_BITS - (ht)->shift)
@@ -67,26 +67,26 @@ using namespace js;
 static void *
 DefaultAllocTable(void *pool, size_t size)
 {
-    return OffTheBooks::malloc_(size);
+    return js_malloc(size);
 }
 
 static void
 DefaultFreeTable(void *pool, void *item, size_t size)
 {
-    UnwantedForeground::free_(item);
+    js_free(item);
 }
 
 static JSHashEntry *
 DefaultAllocEntry(void *pool, const void *key)
 {
-    return (JSHashEntry*) OffTheBooks::malloc_(sizeof(JSHashEntry));
+    return (JSHashEntry*) js_malloc(sizeof(JSHashEntry));
 }
 
 static void
-DefaultFreeEntry(void *pool, JSHashEntry *he, unsigned flag)
+DefaultFreeEntry(void *pool, JSHashEntry *he, uintN flag)
 {
     if (flag == HT_FREE_ENTRY)
-        UnwantedForeground::free_(he);
+        js_free(he);
 }
 
 static JSHashAllocOps defaultHashAllocOps = {
@@ -95,7 +95,7 @@ static JSHashAllocOps defaultHashAllocOps = {
 };
 
 JS_PUBLIC_API(JSHashTable *)
-JS_NewHashTable(uint32_t n, JSHashFunction keyHash,
+JS_NewHashTable(uint32 n, JSHashFunction keyHash,
                 JSHashComparator keyCompare, JSHashComparator valueCompare,
                 JSHashAllocOps *allocOps, void *allocPriv)
 {
@@ -105,8 +105,8 @@ JS_NewHashTable(uint32_t n, JSHashFunction keyHash,
     if (n <= MINBUCKETS) {
         n = MINBUCKETSLOG2;
     } else {
-        n = JS_CEILING_LOG2W(n);
-        if (int32_t(n) < 0)
+        n = JS_CeilingLog2(n);
+        if ((int32)n < 0)
             return NULL;
     }
 
@@ -137,7 +137,7 @@ JS_NewHashTable(uint32_t n, JSHashFunction keyHash,
 JS_PUBLIC_API(void)
 JS_HashTableDestroy(JSHashTable *ht)
 {
-    uint32_t i, n;
+    uint32 i, n;
     JSHashEntry *he, **hep;
     JSHashAllocOps *allocOps = ht->allocOps;
     void *allocPriv = ht->allocPriv;
@@ -194,7 +194,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
 }
 
 static JSBool
-Resize(JSHashTable *ht, uint32_t newshift)
+Resize(JSHashTable *ht, uint32 newshift)
 {
     size_t nb, nentries, i;
     JSHashEntry **oldbuckets, *he, *next, **hep;
@@ -249,7 +249,7 @@ JS_PUBLIC_API(JSHashEntry *)
 JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **&hep,
                    JSHashNumber keyHash, const void *key, void *value)
 {
-    uint32_t n;
+    uint32 n;
     JSHashEntry *he;
 
     /* Grow the table if it is overloaded */
@@ -301,7 +301,7 @@ JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
 JS_PUBLIC_API(void)
 JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
 {
-    uint32_t n;
+    uint32 n;
 
     *hep = he->next;
     ht->allocOps->freeEntry(ht->allocPriv, he, HT_FREE_ENTRY);
@@ -355,7 +355,7 @@ JS_PUBLIC_API(int)
 JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
 {
     JSHashEntry *he, **hep, **bucket;
-    uint32_t nlimit, n, nbuckets, newlog2;
+    uint32 nlimit, n, nbuckets, newlog2;
     int rv;
 
     nlimit = ht->nentries;
@@ -385,7 +385,7 @@ out:
         JS_ASSERT(ht->nentries < nlimit);
         nbuckets = NBUCKETS(ht);
         if (MINBUCKETS < nbuckets && ht->nentries < UNDERLOADED(nbuckets)) {
-            newlog2 = JS_CEILING_LOG2W(ht->nentries);
+            newlog2 = JS_CeilingLog2(ht->nentries);
             if (newlog2 < MINBUCKETSLOG2)
                 newlog2 = MINBUCKETSLOG2;
 
@@ -404,8 +404,8 @@ JS_PUBLIC_API(void)
 JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
     double sqsum, mean, sigma;
-    uint32_t nchains, nbuckets;
-    uint32_t i, n, maxChain, maxChainLen;
+    uint32 nchains, nbuckets;
+    uint32 i, n, maxChain, maxChainLen;
     JSHashEntry *he;
 
     sqsum = 0;
